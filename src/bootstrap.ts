@@ -1,6 +1,7 @@
 import express from "express";
 import dotenv from "dotenv";
 import path from "path";
+import routers from "./routes";
 
 dotenv.config({
   path: path.resolve("./src/config/.env"),
@@ -10,6 +11,8 @@ const app = express();
 
 export const bootstrap = () => {
   app.use(express.json());
+
+  app.use("/api/v1", routers);
 
   const port = process.env.PORT || 5000;
 
