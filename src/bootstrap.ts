@@ -2,6 +2,7 @@ import express from "express";
 import dotenv from "dotenv";
 import path from "path";
 import routers from "./routes";
+import { errorHandler } from "./middlewares/error.middleware";
 
 dotenv.config({
   path: path.resolve("./src/config/.env"),
@@ -13,6 +14,7 @@ export const bootstrap = () => {
   app.use(express.json());
 
   app.use("/api/v1", routers);
+  app.use(errorHandler);
 
   const port = process.env.PORT || 5000;
 
