@@ -10,3 +10,21 @@ export class AppError extends Error {
     Error.captureStackTrace(this, this.constructor);
   }
 }
+
+export class ValidationError extends AppError {
+  details: {
+    source: "body" | "query" | "params";
+    issues: { path: string; message: string }[];
+  };
+
+  constructor(
+    message: string,
+    details: {
+      source: "body" | "query" | "params";
+      issues: { path: string; message: string }[];
+    }
+  ) {
+    super(message, 400);
+    this.details = details;
+  }
+}
