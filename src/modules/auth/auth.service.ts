@@ -1,14 +1,17 @@
+import { IUser } from "./../../models/user.model";
 import { NextFunction, Request, Response } from "express";
 import { SignupDTO } from "./auth.dto";
-import { HydratedDocument, Model } from "mongoose";
-import { IUser, UserModel } from "../../models/user.model";
+import { HydratedDocument } from "mongoose";
+import { AppError } from "../../utils/AppError";
+import { UserRepository } from "../../repositories/user.repository";
 
 interface IAuthServices {
   signup(req: Request, res: Response, next: NextFunction): Promise<Response>;
 }
 
 export class AuthServices implements IAuthServices {
-  private userModel: Model<IUser> = UserModel;
+  private userModel = new UserRepository();
+
   constructor() {}
 
   async signup(
@@ -20,15 +23,14 @@ export class AuthServices implements IAuthServices {
       req.body;
 
     const isExist = await this.userModel.findOne({ email });
-    if (isExist) {
-      res.status(400).json({ message: "Email already exists" });
-    }
 
+    if (isExist) {
+      throw new AppError("User already exists", 400);
+    }
     const user: HydratedDocument<IUser> = await this.userModel.create({
       firstName,
       lastName,
       email,
-      phone,
       age,
       password,
     });

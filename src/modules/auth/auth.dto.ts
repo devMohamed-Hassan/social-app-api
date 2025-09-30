@@ -4,5 +4,5 @@ export interface SignupDTO {
   email: string;
   password: string;
   age: number;
-  phone: number;
+  phone?: number;
 }
