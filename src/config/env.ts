@@ -7,7 +7,9 @@ interface Env {
   PORT: number;
   MONGO_URI: string;
   CLIENT_URL: string;
-  SALT_ROUNDS: string;
+  SALT_ROUNDS: number;
+  EMAIL_USER: string;
+  EMAIL_PASS: string;
 }
 
 const getEnv = (key: keyof Env, defaultValue?: string): string => {
@@ -25,5 +27,7 @@ export const ENV: Env = {
   PORT: Number(getEnv("PORT", "5000")),
   MONGO_URI: getEnv("MONGO_URI"),
   CLIENT_URL: getEnv("CLIENT_URL", "http://localhost:3000"),
-  SALT_ROUNDS: getEnv("SALT_ROUNDS", "10"),
+  SALT_ROUNDS: Number(getEnv("SALT_ROUNDS", "10")),
+  EMAIL_USER: getEnv("EMAIL_USER"),
+  EMAIL_PASS: getEnv("EMAIL_PASS"),
 };

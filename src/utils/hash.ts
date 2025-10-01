@@ -2,7 +2,7 @@ import { compare, hash } from "bcrypt";
 import { ENV } from "../config/env";
 
 export class Bcrypt {
-  private static readonly saltRounds: number = Number(ENV.SALT_ROUNDS);
+  private static readonly saltRounds: number = ENV.SALT_ROUNDS;
   
   
 
