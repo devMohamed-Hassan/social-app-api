@@ -7,6 +7,7 @@ import { AppError } from "../../utils/AppError";
 import { UserRepository } from "../../repositories/user.repository";
 import { Bcrypt } from "../../utils/hash";
 import emailEmitter from "../../services/email/emailEmitter";
+import { buildOtp } from "../../utils/otp/buildOtp";
 
 interface IAuthServices {
   signup(req: Request, res: Response, next: NextFunction): Promise<Response>;
@@ -25,12 +26,8 @@ export class AuthServices implements IAuthServices {
     let { firstName, lastName, email, age, phone, password }: SignupDTO =
       req.body;
 
-    emailEmitter.emit("sendEmail", {
-      type: "confirmEmail",
-      email: "mohamed.h.ismael@gmail.com",
-      userName: "Amir Gamal",
-      otp: "123456",
-    });
+    const otp = buildOtp(5, 5);
+    console.log(otp);
 
     const isExist = await this.userModel.findOne({ email });
 
