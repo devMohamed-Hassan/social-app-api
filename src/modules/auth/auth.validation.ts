@@ -32,3 +32,9 @@ export const confirmEmailSchema = {
     otp: otpValidator,
   }),
 };
+
+export const resendEmailOTPSchema = {
+  body: z.object({
+    email: emailValidator,
+  }),
+};

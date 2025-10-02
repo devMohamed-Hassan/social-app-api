@@ -34,7 +34,7 @@ export class AuthServices implements IAuthServices {
 
     password = await Bcrypt.hash(password);
 
-    const emailOtp = buildOtp(10, 5);
+    const emailOtp = buildOtp(5, 3);
 
     const user: HydratedDocument<IUser> = await this.userModel.create({
       firstName,
@@ -50,7 +50,7 @@ export class AuthServices implements IAuthServices {
       type: "confirmEmail" as EmailEventType,
       email: user.email,
       userName: `${user.firstName} ${user.lastName}`,
-      otp: emailOtp.code,
+      otp: user.emailOtp?.code,
     });
 
     return res.status(201).json({
@@ -83,7 +83,6 @@ export class AuthServices implements IAuthServices {
     if (user.isVerified) {
       throw new AppError("Email already verified", 400);
     }
-
 
     if (!user.emailOtp) {
       throw new AppError("No OTP found. Please request a new one.", 400);
@@ -124,6 +123,41 @@ export class AuthServices implements IAuthServices {
         phone: user.phone,
         age: user.age,
       },
+    });
+  }
+
+  async resendEmailOtp(
+    req: Request,
+    res: Response,
+    next: NextFunction
+  ): Promise<Response> {
+    const { email }: { email: string } = req.body;
+
+    const user = await this.userModel.findOne({ email });
+
+    if (!user) {
+      throw new AppError("User not found", 404);
+    }
+
+    if (user.isVerified) {
+      throw new AppError("Email is already verified", 400);
+    }
+
+    const newOtp = buildOtp(5, 3);
+
+    user.emailOtp = newOtp;
+
+    await user.save();
+
+    emailEmitter.emit("sendEmail", {
+      type: "confirmEmail" as EmailEventType,
+      email: user.email,
+      userName: `${user.firstName} ${user.lastName}`,
+      otp: user.emailOtp.code,
+    });
+
+    return res.status(200).json({
+      message: "A new OTP has been sent to your email",
     });
   }
 }

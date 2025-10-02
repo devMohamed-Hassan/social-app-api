@@ -1,7 +1,11 @@
 import { Router } from "express";
 import { AuthServices } from "./auth.service";
 import { validate } from "../../middlewares/validate.middleware";
-import { confirmEmailSchema, signupSchema } from "./auth.validation";
+import {
+  confirmEmailSchema,
+  resendEmailOTPSchema,
+  signupSchema,
+} from "./auth.validation";
 
 const authRouter = Router();
 const authServices = new AuthServices();
@@ -14,6 +18,11 @@ authRouter.post(
   "/confirm-email",
   validate(confirmEmailSchema),
   (req, res, next) => authServices.confirmEmail(req, res, next)
+);
+authRouter.post(
+  "/resend-email-otp",
+  validate(resendEmailOTPSchema),
+  (req, res, next) => authServices.resendEmailOtp(req, res, next)
 );
 
 export default authRouter;
