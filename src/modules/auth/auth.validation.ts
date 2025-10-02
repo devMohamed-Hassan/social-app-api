@@ -1,4 +1,5 @@
-import { email, z } from "zod";
+import z from "zod";
+
 import {
   ageValidator,
   emailValidator,
@@ -36,5 +37,12 @@ export const confirmEmailSchema = {
 export const resendEmailOTPSchema = {
   body: z.object({
     email: emailValidator,
+  }),
+};
+
+export const loginSchema = {
+  body: z.object({
+    email: emailValidator,
+    password: passwordValidator,
   }),
 };

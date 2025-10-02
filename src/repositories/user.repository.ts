@@ -19,4 +19,14 @@ export class UserRepository extends BaseRepository<IUser> {
   ): Promise<HydratedDocument<IUser> | null> {
     return this.model.findOne({ email }, projection, options);
   }
+
+  async findByEmailWithPassword(
+    email: string,
+    projection?: ProjectionFields<IUser>,
+    options?: QueryOptions
+  ): Promise<HydratedDocument<IUser> | null> {
+    return this.model
+      .findOne({ email }, projection, options)
+      .select("+password");
+  }
 }

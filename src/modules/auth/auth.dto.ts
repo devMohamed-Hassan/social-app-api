@@ -11,3 +11,8 @@ export interface ConfirmEmailDTO {
   email: string;
   otp: string;
 }
+
+export interface LoginDTO {
+  email: string;
+  password: string;
+}

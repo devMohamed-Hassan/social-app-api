@@ -10,6 +10,8 @@ interface Env {
   SALT_ROUNDS: number;
   EMAIL_USER: string;
   EMAIL_PASS: string;
+  ACCESS_TOKEN_SECRET: string;
+  REFRESH_TOKEN_SECRET: string;
 }
 
 const getEnv = (key: keyof Env, defaultValue?: string): string => {
@@ -30,4 +32,6 @@ export const ENV: Env = {
   SALT_ROUNDS: Number(getEnv("SALT_ROUNDS", "10")),
   EMAIL_USER: getEnv("EMAIL_USER"),
   EMAIL_PASS: getEnv("EMAIL_PASS"),
+  ACCESS_TOKEN_SECRET: getEnv("ACCESS_TOKEN_SECRET"),
+  REFRESH_TOKEN_SECRET: getEnv("REFRESH_TOKEN_SECRET"),
 };

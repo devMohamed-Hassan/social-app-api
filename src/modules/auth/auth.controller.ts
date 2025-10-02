@@ -23,4 +23,6 @@ authRouter.post(
   authServices.resendEmailOtp
 );
 
+authRouter.post("/login", validate(validation.loginSchema), authServices.login);
+
 export default authRouter;

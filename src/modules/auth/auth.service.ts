@@ -1,7 +1,7 @@
 import { EmailEventType } from "./../../services/email/emailEvents";
 import { IUser } from "./../../models/user.model";
 import { NextFunction, Request, Response } from "express";
-import { ConfirmEmailDTO, SignupDTO } from "./auth.dto";
+import { ConfirmEmailDTO, LoginDTO, SignupDTO } from "./auth.dto";
 import { HydratedDocument } from "mongoose";
 import { AppError } from "../../utils/AppError";
 import { UserRepository } from "../../repositories/user.repository";
@@ -9,6 +9,7 @@ import { Bcrypt } from "../../utils/hash";
 import emailEmitter from "../../services/email/emailEmitter";
 import { buildOtp } from "../../utils/otp/buildOtp";
 import { sendSuccess } from "../../utils/sendSuccess";
+import { Token } from "../../services/token/token";
 
 interface IAuthServices {
   signup(req: Request, res: Response, next: NextFunction): Promise<Response>;
@@ -27,7 +28,7 @@ export class AuthServices implements IAuthServices {
     let { firstName, lastName, email, age, phone, password }: SignupDTO =
       req.body;
 
-    const isExist = await this.userModel.findOne({ email });
+    const isExist = await this.userModel.findByEmail(email);
 
     if (isExist) {
       throw new AppError("User already exists", 400);
@@ -78,7 +79,7 @@ export class AuthServices implements IAuthServices {
   ): Promise<Response> => {
     const { email, otp }: ConfirmEmailDTO = req.body;
 
-    const user = await this.userModel.findOne({ email });
+    const user = await this.userModel.findByEmail(email);
 
     if (!user) {
       throw new AppError("User not found", 404);
@@ -141,7 +142,7 @@ export class AuthServices implements IAuthServices {
   ): Promise<Response> => {
     const { email }: { email: string } = req.body;
 
-    const user = await this.userModel.findOne({ email });
+    const user = await this.userModel.findByEmail(email);
 
     if (!user) {
       throw new AppError("User not found", 404);
@@ -168,6 +169,58 @@ export class AuthServices implements IAuthServices {
       res,
       statusCode: 200,
       message: "A new OTP has been sent to your email",
+    });
+  };
+
+  login = async (
+    req: Request,
+    res: Response,
+    next: NextFunction
+  ): Promise<Response> => {
+    const { email, password }: LoginDTO = req.body;
+
+    const user = await this.userModel.findByEmailWithPassword(email);
+
+    if (!user) {
+      throw new AppError("Invalid email or password", 401);
+    }
+
+    if (!user.isVerified) {
+      throw new AppError("Please verify your email before logging in", 403);
+    }
+
+    const isMatch = await Bcrypt.compare(password, user.password);
+    if (!isMatch) {
+      throw new AppError("Invalid email or password", 401);
+    }
+
+    const payload = {
+      id: user._id,
+      email: user.email,
+      //role:user.role
+    };
+
+    const accessToken = Token.generateAccessToken(payload);
+    const refreshToken = Token.generateRefreshToken(payload);
+
+    return sendSuccess({
+      res,
+      statusCode: 200,
+      message: "Login successful",
+      data: {
+        user: {
+          id: user._id,
+          firstName: user.firstName,
+          lastName: user.lastName,
+          email: user.email,
+          phone: user.phone,
+          age: user.age,
+        },
+        tokens: {
+          accessToken,
+          refreshToken,
+        },
+      },
     });
   };
 }
