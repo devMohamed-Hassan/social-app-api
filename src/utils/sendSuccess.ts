@@ -9,9 +9,9 @@ interface SuccessResponseOptions<T> {
 
 export const sendSuccess = <T>({
   res,
+  statusCode = 200,
   message = "Success",
   data,
-  statusCode = 200,
 }: SuccessResponseOptions<T>) => {
   return res.status(statusCode).json({
     success: true,

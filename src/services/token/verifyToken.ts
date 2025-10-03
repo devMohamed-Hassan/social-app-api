@@ -4,6 +4,7 @@ import { IUser } from "../../models/user.model";
 import { AppError } from "../../utils/AppError";
 import { Token } from "./token";
 import { UserRepository } from "../../repositories/user.repository";
+import { HydratedDocument } from "mongoose";
 
 export enum TokenTypes {
   ACCESS = "ACCESS",
@@ -24,7 +25,10 @@ export interface Payload extends JwtPayload {
 export const verifyToken = async ({
   tokenType = TokenTypes.ACCESS,
   authorization,
-}: DecodeOptions): Promise<IUser> => {
+}: DecodeOptions): Promise<{
+  user: HydratedDocument<IUser>;
+  payload: Payload;
+}> => {
   const userModle = new UserRepository();
 
   if (!authorization) {
@@ -46,7 +50,6 @@ export const verifyToken = async ({
       ? Token.verifyAccessToken(token)
       : Token.verifyRefreshToken(token);
 
-
   const user = await userModle.findById(payload._id);
 
   if (!user) {
@@ -59,5 +62,5 @@ export const verifyToken = async ({
       403
     );
   }
-  return user;
+  return { user, payload };
 };

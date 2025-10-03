@@ -13,8 +13,9 @@ export const authenticate = async (
     throw new AppError("Token is required", 401);
   }
 
-  const user = await verifyToken({ authorization });
+  const { user, payload } = await verifyToken({ authorization });
   req.user = user;
+  req.payload = payload;
 
   next();
 };

@@ -10,6 +10,8 @@ import emailEmitter from "../../services/email/emailEmitter";
 import { buildOtp } from "../../utils/otp/buildOtp";
 import { sendSuccess } from "../../utils/sendSuccess";
 import { Token } from "../../services/token/token";
+import { TokenTypes, verifyToken } from "../../services/token/verifyToken";
+import { nanoid } from "nanoid";
 
 interface IAuthServices {
   signup(req: Request, res: Response, next: NextFunction): Promise<Response>;
@@ -200,8 +202,11 @@ export class AuthServices implements IAuthServices {
       //role:user.role
     };
 
-    const accessToken = Token.generateAccessToken(payload);
-    const refreshToken = Token.generateRefreshToken(payload);
+    const jwtid = nanoid();
+    console.log("Jwtid after login", jwtid);
+
+    const accessToken = Token.generateAccessToken(payload, { jwtid });
+    const refreshToken = Token.generateRefreshToken(payload, { jwtid });
 
     return sendSuccess({
       res,
@@ -220,6 +225,41 @@ export class AuthServices implements IAuthServices {
           accessToken,
           refreshToken,
         },
+      },
+    });
+  };
+
+  refreshToken = async (
+    req: Request,
+    res: Response,
+    next: NextFunction
+  ): Promise<void> => {
+    const authorization = req.headers.authorization;
+
+    if (!authorization) {
+      throw new AppError("Token is required", 401);
+    }
+
+    const { user, payload } = await verifyToken({
+      tokenType: TokenTypes.REFRESH,
+      authorization,
+    });
+
+    const newPayload = {
+      _id: user._id as string,
+      email: user.email,
+    };
+    const jwtid = payload.jti;
+    console.log("Jwtid after refresh token", jwtid);
+
+    const accessToken = Token.generateAccessToken(newPayload, { jwtid });
+
+    sendSuccess({
+      res,
+      statusCode: 200,
+      message: "Access token refreshed successfully",
+      data: {
+        accessToken,
       },
     });
   };
