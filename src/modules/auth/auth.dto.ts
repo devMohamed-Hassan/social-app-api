@@ -16,3 +16,9 @@ export interface LoginDTO {
   email: string;
   password: string;
 }
+
+export interface ResetPasswordDTO {
+  email: string;
+  otp: string;
+  password: string;
+}

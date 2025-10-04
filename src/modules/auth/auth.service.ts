@@ -1,7 +1,12 @@
 import { EmailEventType } from "./../../services/email/emailEvents";
 import { IUser } from "./../../models/user.model";
 import { NextFunction, Request, Response } from "express";
-import { ConfirmEmailDTO, LoginDTO, SignupDTO } from "./auth.dto";
+import {
+  ConfirmEmailDTO,
+  LoginDTO,
+  ResetPasswordDTO,
+  SignupDTO,
+} from "./auth.dto";
 import { HydratedDocument } from "mongoose";
 import { AppError } from "../../utils/AppError";
 import { UserRepository } from "../../repositories/user.repository";
@@ -315,6 +320,61 @@ export class AuthServices implements IAuthServices {
         expiry: user.passwordOtp.expiresAt,
         expiresIn: otp.expiresAt.getTime() - Date.now(),
       },
+    });
+  };
+
+  resetPassword = async (
+    req: Request,
+    res: Response,
+    next: NextFunction
+  ): Promise<Response> => {
+    const { email, otp, password }: ResetPasswordDTO = req.body;
+
+    const user = await this.userModel.findByEmail(email);
+
+    if (!user) {
+      throw new AppError("No account found with this email", 404);
+    }
+
+    if (!user.isVerified) {
+      throw new AppError("Please verify your email first", 403);
+    }
+
+    if (!user.passwordOtp || !user.passwordOtp.code) {
+      throw new AppError("No OTP request found. Please request again", 400);
+    }
+
+    if (user.passwordOtp.expiresAt < new Date()) {
+      user.passwordOtp = undefined;
+      await user.save();
+      throw new AppError("OTP expired. Please request again", 400);
+    }
+
+    if (user.passwordOtp.attempts >= user.passwordOtp.maxAttempts) {
+      user.passwordOtp = undefined;
+      user.save();
+      throw new AppError(
+        "Too many invalid attempts. Please request a new OTP",
+        429
+      );
+    }
+
+    if (user.passwordOtp.code !== otp) {
+      user.passwordOtp.attempts += 1;
+      await user.save();
+      throw new AppError("Invalid OTP. Please check and try again", 400);
+    }
+
+    user.password = await Bcrypt.hash(password);
+
+    user.passwordOtp = undefined;
+
+    await user.save();
+
+    return sendSuccess({
+      res,
+      statusCode: 200,
+      message: "Password reset successfully",
     });
   };
 }

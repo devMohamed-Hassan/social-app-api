@@ -34,4 +34,10 @@ authRouter.post(
   authServices.forgotPassword
 );
 
+authRouter.post(
+  "/reset-password",
+  validate(validation.resetPassword),
+  authServices.resetPassword
+);
+
 export default authRouter;
