@@ -5,13 +5,13 @@ export const emailTemplate = ({
   message,
   expiryMinutes = 10,
 }: {
-  code: string;
+  code?: string;
   name: string;
   subject: string;
   message: string;
-  expiryMinutes: number;
+  expiryMinutes?: number;
 }): string => `<!DOCTYPE html>
-<html>
+<html lang="en">
   <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
@@ -21,12 +21,14 @@ export const emailTemplate = ({
     style="
       margin: 0;
       padding: 0;
-      font-family: 'Segoe UI', Roboto, Arial, sans-serif;
+      font-family: 'Inter', 'Segoe UI', Roboto, Arial, sans-serif;
+      background-color: #0e0b14;
+      color: #e4e1ee;
     "
   >
     <table role="presentation" cellspacing="0" cellpadding="0" border="0" width="100%">
       <tr>
-        <td align="center" style="padding: 30px 15px">
+        <td align="center" style="padding: 40px 15px;">
           <table
             role="presentation"
             cellspacing="0"
@@ -34,12 +36,11 @@ export const emailTemplate = ({
             border="0"
             width="600"
             style="
-              max-width: 600px;
-              background: #ffffff;
-              border: 1px solid #e6e6e6;
-              border-radius: 12px;
-              box-shadow: 0 6px 18px rgba(0, 0, 0, 0.06);
+              background: #1a1428;
+              border-radius: 18px;
+              box-shadow: 0 6px 20px rgba(70, 50, 120, 0.35);
               overflow: hidden;
+              border: 1px solid rgba(124, 58, 237, 0.2);
             "
           >
             <!-- Header -->
@@ -47,16 +48,16 @@ export const emailTemplate = ({
               <td
                 align="center"
                 style="
-                  background: linear-gradient(135deg, #008080, #20c997);
-                  padding: 28px 20px;
+                  background: linear-gradient(135deg, #4c2c85, #6a4bb5);
+                  padding: 42px 20px;
                 "
               >
                 <h1
                   style="
                     margin: 0;
-                    font-size: 24px;
+                    font-size: 26px;
                     color: #ffffff;
-                    font-weight: 600;
+                    font-weight: 700;
                     letter-spacing: 0.5px;
                   "
                 >
@@ -67,35 +68,38 @@ export const emailTemplate = ({
 
             <!-- Body -->
             <tr>
-              <td style="padding: 30px; color: #333333; line-height: 1.7">
+              <td style="padding: 35px; line-height: 1.7; color: #d8d4e7;">
                 <h2
                   style="
                     margin-top: 0;
-                    color: #008080;
+                    color: #b69cff;
                     font-size: 20px;
                     font-weight: 600;
                   "
                 >
                   Hi ${name},
                 </h2>
-                <p style="margin: 0 0 18px; font-size: 15px; color: #555555">
+                <p style="margin: 0 0 20px; font-size: 15px; color: #cfcbe0;">
                   ${message}
                 </p>
 
+                ${
+                  code
+                    ? `
                 <!-- Code Box -->
-                <table role="presentation" cellspacing="0" cellpadding="0" border="0" align="center" style="margin: 28px auto">
+                <table role="presentation" cellspacing="0" cellpadding="0" border="0" align="center" style="margin: 30px auto;">
                   <tr>
                     <td
                       style="
-                        background: #008080;
+                        background: linear-gradient(145deg, #5b3fa8, #7c5fd1);
                         color: #ffffff;
-                        padding: 16px 50px;
-                        border-radius: 10px;
-                        font-size: 24px;
+                        padding: 18px 55px;
+                        border-radius: 12px;
+                        font-size: 26px;
                         font-weight: bold;
                         text-align: center;
                         letter-spacing: 4px;
-                        box-shadow: 0 3px 8px rgba(0, 128, 128, 0.25);
+                        box-shadow: 0 0 18px rgba(124, 58, 237, 0.4);
                       "
                     >
                       ${code}
@@ -103,25 +107,28 @@ export const emailTemplate = ({
                   </tr>
                 </table>
 
-                <p style="margin: 18px 0 0; font-size: 14px; color: #666666">
-                  This code is valid for the next <strong>${expiryMinutes} minutes</strong>.
-                  Please do not share it with anyone.
+                <p style="margin: 18px 0 0; font-size: 14px; color: #a78bfa;">
+                  This code is valid for <strong>${expiryMinutes} minutes</strong>.
+                  Keep it private and secure.
                 </p>
+                `
+                    : ""
+                }
 
-                <p style="margin: 25px 0 0; font-size: 14px; color: #555555">
-                  If you didn’t request this, you can safely ignore this email.
+                <p style="margin: 28px 0 0; font-size: 14px; color: #b6aecf;">
+                  If you didn’t request this, just ignore this email.
                 </p>
 
                 <p
                   style="
-                    margin: 28px 0 0;
+                    margin: 32px 0 0;
                     font-size: 14px;
-                    color: #555555;
-                    font-weight: 500;
+                    color: #cbb6ff;
+                    font-weight: 600;
                   "
                 >
                   Best regards, <br />
-                  <span>Developer, Mohamed Hassan</span>
+                  <span style="color: #bfa6ff;">Mohamed Hassan</span>
                 </p>
               </td>
             </tr>
@@ -131,24 +138,20 @@ export const emailTemplate = ({
               <td
                 align="center"
                 style="
-                  background: #f9fafc;
-                  padding: 22px;
+                  background: #171225;
+                  padding: 25px;
                   font-size: 13px;
-                  color: #888888;
-                  border-top: 1px solid #e4eaf0;
+                  color: #9b93b8;
+                  border-top: 1px solid rgba(167, 139, 250, 0.1);
                 "
               >
                 <p style="margin: 0">
-                  &copy; 2025 <strong>Social App</strong>. All rights reserved.
+                  &copy; 2025 <strong style="color: #bfa6ff;">Social App</strong>. All rights reserved.
                 </p>
                 <p style="margin: 6px 0 0">
-                  <a href="#" style="color: #008080; text-decoration: none"
-                    >Privacy Policy</a
-                  >
-                  ·
-                  <a href="#" style="color: #008080; text-decoration: none"
-                    >Help Center</a
-                  >
+                  <a href="#" style="color: #cbb6ff; text-decoration: none;">Privacy Policy</a>
+                  &nbsp;·&nbsp;
+                  <a href="#" style="color: #a78bfa; text-decoration: none;">Help Center</a>
                 </p>
               </td>
             </tr>
