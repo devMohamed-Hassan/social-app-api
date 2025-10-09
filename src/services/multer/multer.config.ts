@@ -13,7 +13,7 @@ export const fileTypes = {
   images: ["image/jpeg", "image/png", "image/gif"],
 };
 
-const FILE_SIZE_THRESHOLD = 1 * 1024 * 1024;
+const FILE_SIZE_THRESHOLD = 20 * 1024 * 1024;
 const MAX_FILE_SIZE = 50 * 1024 * 1024;
 const uploadPath = path.join(__dirname, "../../../uploads");
 
