@@ -1,9 +1,9 @@
-import fs from "fs";
 import { S3Service } from "./../../services/s3.service";
 import { NextFunction, Request, Response } from "express";
 import { sendSuccess } from "../../utils/sendSuccess";
 import { AppError } from "../../utils/AppError";
 import { UserRepository } from "../../repositories/user.repository";
+import mime from "mime-types";
 
 export interface IUserServices {
   profileImage(
@@ -51,6 +51,45 @@ export class UserServices implements IUserServices {
       data: {
         user: updatedUser,
       },
+    });
+  };
+
+  generatePresignedProfileUrl = async (
+    req: Request,
+    res: Response,
+    next: NextFunction
+  ): Promise<Response> => {
+    const userId = req.user?.id;
+    const { fileName, mimeType } = req.body;
+
+    if (!fileName || !mimeType) {
+      throw new AppError("fileName and mimeType are required", 400);
+    }
+
+    const detectedMime = mime.lookup(fileName);
+    if (detectedMime !== mimeType) {
+      throw new AppError("File extension does not match MIME type", 400);
+    }
+
+    const allowedMimeTypes = ["image/jpeg", "image/png", "image/webp"];
+    if (!allowedMimeTypes.includes(mimeType)) {
+      throw new AppError(
+        "Invalid file type. Only JPG, PNG, and WEBP allowed",
+        400
+      );
+    }
+
+    const folder = `users/${userId}/profile-images`;
+    const { uploadUrl, fileUrl } = await this.s3Service.generatePresignedUrl(
+      folder,
+      fileName,
+      mimeType
+    );
+
+    return sendSuccess({
+      res,
+      message: "Presigned URL generated successfully.",
+      data: { uploadUrl, fileUrl },
     });
   };
 }

@@ -26,4 +26,8 @@ userRouter.patch(
   userServices.profileImage
 );
 
+userRouter.post("/profile-image/presigned", authenticate, 
+  userServices.generatePresignedProfileUrl
+);
+
 export default userRouter;
