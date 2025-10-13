@@ -9,6 +9,8 @@ export interface IUser extends Document {
   password: string;
   phone: string;
   age?: number;
+  profileImage?: string;
+  coverImage?: string;
   emailOtp?: IOtp | undefined;
   passwordOtp?: IOtp | undefined;
   isVerified: boolean;
@@ -20,7 +22,6 @@ const UserSchema = new Schema<IUser>(
   {
     firstName: { type: String, required: true, trim: true },
     lastName: { type: String, required: true, trim: true },
-
     email: {
       type: String,
       required: true,
@@ -28,15 +29,12 @@ const UserSchema = new Schema<IUser>(
       lowercase: true,
       trim: true,
     },
-
     password: { type: String, required: true, select: false },
-
     phone: { type: String, unique: true, sparse: true },
-
     age: { type: Number, min: 18, max: 100 },
-
+    profileImage: { type: String },
+    coverImage: { type: String },
     isVerified: { type: Boolean, default: false },
-
     emailOtp: OtpSchema,
     passwordOtp: OtpSchema,
   },

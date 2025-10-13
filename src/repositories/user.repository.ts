@@ -29,4 +29,16 @@ export class UserRepository extends BaseRepository<IUser> {
       .findOne({ email }, projection, options)
       .select("+password");
   }
+
+  async updateProfileImage(
+    userId: string,
+    imageUrl: string
+  ): Promise<IUser | null> {
+    const user = await UserModel.findByIdAndUpdate(
+      userId,
+      { profileImage: imageUrl },
+      { new: true, select: "-password" }
+    );
+    return user;
+  }
 }

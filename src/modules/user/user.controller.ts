@@ -19,7 +19,7 @@ userRouter.get(
   }
 );
 
-userRouter.put(
+userRouter.patch(
   "/profile-image",
   authenticate,
   upload.single("image"),

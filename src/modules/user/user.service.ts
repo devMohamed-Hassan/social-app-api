@@ -3,6 +3,7 @@ import { S3Service } from "./../../services/s3.service";
 import { NextFunction, Request, Response } from "express";
 import { sendSuccess } from "../../utils/sendSuccess";
 import { AppError } from "../../utils/AppError";
+import { UserRepository } from "../../repositories/user.repository";
 
 export interface IUserServices {
   profileImage(
@@ -13,6 +14,7 @@ export interface IUserServices {
 }
 
 export class UserServices implements IUserServices {
+  private userModel = new UserRepository();
   private s3Service: S3Service;
 
   constructor() {
@@ -37,16 +39,17 @@ export class UserServices implements IUserServices {
       `users/${userId}/profile-images`
     );
 
-    fs.unlink(req.file.path, (err) => {
-      if (err) console.error("Failed to delete temp file:", err);
-    });
+    const updatedUser = await this.userModel.updateProfileImage(
+      userId,
+      imageUrl
+    );
 
     return sendSuccess({
       res,
       statusCode: 200,
       message: "Profile image uploaded successfully.",
       data: {
-        imageUrl,
+        user: updatedUser,
       },
     });
   };
