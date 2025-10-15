@@ -17,6 +17,7 @@ import { sendSuccess } from "../../utils/sendSuccess";
 import { Token } from "../../services/token/token";
 import { TokenTypes, verifyToken } from "../../services/token/verifyToken";
 import { nanoid } from "nanoid";
+import { S3Service } from "../../services/s3.service";
 
 interface IAuthServices {
   signup(req: Request, res: Response, next: NextFunction): Promise<Response>;
@@ -223,6 +224,16 @@ export class AuthServices implements IAuthServices {
     const accessToken = Token.generateAccessToken(payload, { jwtid });
     const refreshToken = Token.generateRefreshToken(payload, { jwtid });
 
+    const s3Service = new S3Service();
+    const expiresInSeconds = 3600; // ساعة
+    const now = Math.floor(Date.now() / 1000); // timestamp بالثواني
+    const expiresAt = now + expiresInSeconds;
+
+    let profileImageUrl: string | null = null;
+    if (user.profileImage) {
+      profileImageUrl = await s3Service.getSignedUrl(user.profileImage);
+    }
+
     return sendSuccess({
       res,
       statusCode: 200,
@@ -235,6 +246,13 @@ export class AuthServices implements IAuthServices {
           email: user.email,
           phone: user.phone,
           age: user.age,
+          profileImage: profileImageUrl
+            ? {
+                url: profileImageUrl,
+                expiresIn: expiresInSeconds,
+                expiresAt,
+              }
+            : null,
         },
         tokens: {
           accessToken,

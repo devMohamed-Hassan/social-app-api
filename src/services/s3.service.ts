@@ -17,6 +17,10 @@ export class S3Service {
     this.bucketName = ENV.AWS_S3_BUCKET_NAME;
   }
 
+  async getPublicUrl(key: string) {
+    return `https://${this.bucketName}.s3.${ENV.AWS_REGION}.amazonaws.com/${key}`;
+  }
+
   async uploadFile(file: Express.Multer.File, folder = "uploads") {
     if (!file) throw new AppError("No file provided", 400);
 
@@ -52,8 +56,7 @@ export class S3Service {
       if (err) console.error("Failed to delete temp file:", err);
     });
 
-    const fileUrl = `https://${this.bucketName}.s3.${ENV.AWS_REGION}.amazonaws.com/${key}`;
-    return fileUrl;
+    return key;
   }
 
   async uploadFiles(files: Express.Multer.File[], folder = "uploads") {
@@ -84,7 +87,7 @@ export class S3Service {
       expiresIn: 60 * 5,
     });
 
-    const fileUrl = `https://${this.bucketName}.s3.${ENV.AWS_REGION}.amazonaws.com/${key}`;
+    const fileUrl = this.getPublicUrl(key);
 
     return { uploadUrl, fileUrl };
   }
@@ -96,5 +99,23 @@ export class S3Service {
     });
 
     return await s3.send(command);
+  }
+
+  async getSignedUrl(
+    key: string,
+    options?: { download?: boolean; name?: string }
+  ) {
+    const { download = false, name } = options || {};
+
+    const command = new GetObjectCommand({
+      Bucket: this.bucketName,
+      Key: key,
+      ResponseContentDisposition: download
+        ? `attachment; filename="${name || key.split("/").pop() || "file"}"`
+        : undefined,
+    });
+
+    const url = await getSignedUrl(s3, command, { expiresIn: 3600 });
+    return url;
   }
 }
