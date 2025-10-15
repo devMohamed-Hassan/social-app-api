@@ -9,8 +9,8 @@ export interface IUser extends Document {
   password: string;
   phone: string;
   age?: number;
-  profileImage?: string;
-  coverImage?: string;
+  profileImage?: string | undefined;
+  coverImage?: string | undefined;
   emailOtp?: IOtp | undefined;
   passwordOtp?: IOtp | undefined;
   isVerified: boolean;

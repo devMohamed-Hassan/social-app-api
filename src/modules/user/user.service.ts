@@ -14,7 +14,7 @@ export interface IUserServices {
 }
 
 export class UserServices implements IUserServices {
-  private userModel = new UserRepository();
+  private UserModel = new UserRepository();
   private s3Service: S3Service;
 
   constructor() {
@@ -39,7 +39,7 @@ export class UserServices implements IUserServices {
       `users/${userId}/profile-images`
     );
 
-    const updatedUser = await this.userModel.updateProfileImage(
+    const updatedUser = await this.UserModel.updateProfileImage(
       userId,
       imageUrl
     );
@@ -90,6 +90,30 @@ export class UserServices implements IUserServices {
       res,
       message: "Presigned URL generated successfully.",
       data: { uploadUrl, fileUrl },
+    });
+  };
+
+  deleteProfileImage = async (
+    req: Request,
+    res: Response,
+    next: NextFunction
+  ): Promise<Response> => {
+    const userId = req.user?.id;
+
+    const user = await this.UserModel.findById(userId);
+    if (!user) throw new AppError("User not found", 404);
+
+    if (!user.profileImage)
+      throw new AppError("User has no profile image to delete", 400);
+
+    await this.s3Service.deleteFile(user.profileImage);
+    user.profileImage = undefined;
+    await user.save();
+
+    return sendSuccess({
+      res,
+      statusCode: 200,
+      message: "Profile image deleted successfully",
     });
   };
 }

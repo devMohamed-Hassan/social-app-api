@@ -1,4 +1,5 @@
 import {
+  DeleteObjectCommand,
   GetObjectCommand,
   PutObjectCommand,
   PutObjectCommandInput,
@@ -117,5 +118,23 @@ export class S3Service {
 
     const url = await getSignedUrl(s3, command, { expiresIn: 3600 });
     return url;
+  }
+
+  async deleteFile(key: string) {
+    if (!key) throw new AppError("File key is required", 400);
+
+    const command = new DeleteObjectCommand({
+      Bucket: this.bucketName,
+      Key: key,
+    });
+
+    try {
+      await s3.send(command);
+      console.log(`Deleted file: ${key}`);
+      return true;
+    } catch (err: any) {
+      console.error("S3 delete error:", err);
+      throw new AppError("Failed to delete file from S3", 500);
+    }
   }
 }

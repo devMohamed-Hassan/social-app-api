@@ -26,8 +26,16 @@ userRouter.patch(
   userServices.profileImage
 );
 
-userRouter.post("/profile-image/presigned", authenticate, 
+userRouter.post(
+  "/profile-image/presigned",
+  authenticate,
   userServices.generatePresignedProfileUrl
+);
+
+userRouter.delete(
+  "/profile-image",
+  authenticate,
+  userServices.deleteProfileImage
 );
 
 export default userRouter;
