@@ -1,5 +1,7 @@
 import {
   DeleteObjectCommand,
+  DeleteObjectsCommand,
+  DeleteObjectsCommandOutput,
   GetObjectCommand,
   PutObjectCommand,
   PutObjectCommandInput,
@@ -136,5 +138,38 @@ export class S3Service {
       console.error("S3 delete error:", err);
       throw new AppError("Failed to delete file from S3", 500);
     }
+  }
+
+  async deleteFiles(keys: string[]): Promise<DeleteObjectsCommandOutput> {
+    if (!keys || keys.length === 0) {
+      throw new AppError("No file keys provided", 400);
+    }
+
+    const objects = keys.map((key) => ({ Key: key }));
+
+    const command = new DeleteObjectsCommand({
+      Bucket: this.bucketName,
+      Delete: {
+        Objects: objects,
+        Quiet: keys.length > 50,
+      },
+    });
+
+    const result = (await s3.send(command)) as DeleteObjectsCommandOutput;
+
+    const deletedCount = result.Deleted?.length || 0;
+    const errorCount = result.Errors?.length || 0;
+
+    console.log(
+      `Deleted ${deletedCount} file(s) from S3${
+        errorCount ? ` (${errorCount} failed)` : ""
+      }`
+    );
+
+    if (errorCount > 0) {
+      console.warn("Some files failed to delete:", result.Errors);
+    }
+
+    return result;
   }
 }
