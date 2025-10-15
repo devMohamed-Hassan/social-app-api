@@ -159,4 +159,28 @@ export class UserServices implements IUserServices {
       },
     });
   };
+
+  deleteCoverImage = async (
+    req: Request,
+    res: Response,
+    next: NextFunction
+  ): Promise<Response> => {
+    const userId = req.user?.id;
+
+    const user = await this.UserModel.findById(userId);
+    if (!user) throw new AppError("User not found", 404);
+
+    if (!user.coverImage)
+      throw new AppError("User has no cover image to delete", 400);
+
+    await this.s3Service.deleteFile(user.coverImage);
+    user.coverImage = undefined;
+    await user.save();
+
+    return sendSuccess({
+      res,
+      statusCode: 200,
+      message: "Cover image deleted successfully",
+    });
+  };
 }

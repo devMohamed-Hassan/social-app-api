@@ -45,4 +45,6 @@ userRouter.delete(
   userServices.deleteProfileImage
 );
 
+userRouter.delete("/cover-image", authenticate, userServices.deleteCoverImage);
+
 export default userRouter;
