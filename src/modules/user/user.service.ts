@@ -26,23 +26,28 @@ export class UserServices implements IUserServices {
     res: Response,
     next: NextFunction
   ): Promise<Response> => {
-    console.log({ file: req.file });
-
     const userId = req.user?.id;
 
     if (!req.file) {
       throw new AppError("No image file uploaded", 400);
     }
 
-    const imageUrl = await this.s3Service.uploadFile(
+    const user = await this.UserModel.findById(userId);
+
+    if (!user) {
+      throw new AppError("User not found", 404);
+    }
+
+    if (user.profileImage) {
+      await this.s3Service.deleteFile(user.profileImage);
+    }
+
+    const newKey = await this.s3Service.uploadFile(
       req.file,
       `users/${userId}/profile-images`
     );
 
-    const updatedUser = await this.UserModel.updateProfileImage(
-      userId,
-      imageUrl
-    );
+    const updatedUser = await this.UserModel.updateProfileImage(userId, newKey);
 
     return sendSuccess({
       res,
