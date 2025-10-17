@@ -15,10 +15,9 @@ export interface IUserServices {
 
 export class UserServices implements IUserServices {
   private UserModel = new UserRepository();
-  private s3Service: S3Service;
+  private s3Service = new S3Service();
 
   constructor() {
-    this.s3Service = new S3Service();
   }
 
   profileImage = async (
