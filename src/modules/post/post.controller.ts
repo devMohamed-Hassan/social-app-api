@@ -29,18 +29,15 @@ postRouter.post(
 
 postRouter.get(routes.getAllPosts, authenticate, postServices.getAllPosts);
 
-// postRouter.get("/:id", authMiddleware, getPostById);
+postRouter.get(routes.getPostById, authenticate, postServices.getPostById);
 // postRouter.put("/:id", authMiddleware, updatePost);
 // postRouter.delete("/:id", authMiddleware, deletePost);
 
-// // Reactions & Comments
 postRouter.post(
   routes.reactToPost,
   authenticate,
   validate(reactToPostSchema),
   postServices.reactToPost
 );
-
-// postRouter.post("/:id/comment", authMiddleware, addComment);
 
 export default postRouter;

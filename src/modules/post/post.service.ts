@@ -6,6 +6,7 @@ import { UserRepository } from "../../repositories/user.repository";
 import { PostRepository } from "../../repositories/post.repository";
 import { AppError } from "../../utils/AppError";
 import mongoose, { Types } from "mongoose";
+import { success } from "zod";
 
 export interface IPostServices {
   createPost(
@@ -134,6 +135,27 @@ export class PostServices implements IPostServices {
       statusCode: 200,
       message: "Reaction updated successfully",
       data: updatedPost,
+    });
+  };
+
+  getPostById = async (
+    req: Request,
+    res: Response,
+    next: NextFunction
+  ): Promise<Response> => {
+    const { id } = req.params;
+
+    if (!id) throw new AppError("Post ID is required", 400);
+
+    const post = await this.PostModel.getPostById(id);
+
+    if (!post) throw new AppError("Post not found", 404);
+
+    return sendSuccess({
+      res,
+      statusCode: 200,
+      message: "Post fetched successfully",
+      data: post,
     });
   };
 }
