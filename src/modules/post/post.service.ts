@@ -158,4 +158,28 @@ export class PostServices implements IPostServices {
       data: post,
     });
   };
+
+  deletePost = async (
+    req: Request,
+    res: Response,
+    next: NextFunction
+  ): Promise<Response> => {
+    const { id } = req.params;
+    const user = req.user;
+
+    console.log({ id });
+    console.log("heloooooooooooo");
+
+    if (!id) throw new AppError("Post ID is required", 400);
+    if (!user?._id) throw new AppError("Unauthorized", 401);
+
+    const deletedPost = await this.PostModel.deletePost(id);
+
+    return sendSuccess({
+      res,
+      statusCode: 200,
+      message: "Post deleted successfully",
+      data: deletedPost,
+    });
+  };
 }
