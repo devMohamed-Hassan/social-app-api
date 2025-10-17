@@ -27,7 +27,8 @@ postRouter.post(
   postServices.createPost
 );
 
-// postRouter.get("/", authMiddleware, getAllPosts);
+postRouter.get(routes.getAllPosts, authenticate, postServices.getAllPosts);
+
 // postRouter.get("/:id", authMiddleware, getPostById);
 // postRouter.put("/:id", authMiddleware, updatePost);
 // postRouter.delete("/:id", authMiddleware, deletePost);

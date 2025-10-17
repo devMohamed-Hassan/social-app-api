@@ -82,4 +82,30 @@ export class PostServices implements IPostServices {
       data: newPost,
     });
   };
+
+  getAllPosts = async (
+    req: Request,
+    res: Response,
+    next: NextFunction
+  ): Promise<Response> => {
+    const user = req.user;
+    if (!user?._id) throw new AppError("Unauthorized", 401);
+
+    const userData = await this.UserModel.findById(user._id as string);
+    const friendIds = userData?.friends?.map((f: any) => String(f._id)) || [];
+
+    const posts = await this.PostModel.getAllPosts(
+      user._id as string,
+      friendIds
+    );
+
+    return sendSuccess({
+      res,
+      statusCode: 200,
+      message: "Posts retrieved successfully",
+      data: {
+        posts,
+      },
+    });
+  };
 }

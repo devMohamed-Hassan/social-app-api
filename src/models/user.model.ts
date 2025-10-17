@@ -1,4 +1,4 @@
-import { model, Schema, Document } from "mongoose";
+import { model, Schema, Document, Types } from "mongoose";
 import OtpSchema from "./otp.model";
 import { IOtp } from "../types/otp.types";
 import { HashUtil } from "../utils/hash/bcrypt.util";
@@ -17,6 +17,12 @@ export interface IUser extends Document {
   emailOtp?: IOtp | undefined;
   passwordOtp?: IOtp | undefined;
   isVerified: boolean;
+  friends: Types.ObjectId[];
+  friendRequests: {
+    from: Types.ObjectId;
+    to: Types.ObjectId;
+    status: "pending" | "accepted" | "rejected";
+  }[];
   createdAt: Date;
   updatedAt: Date;
 
@@ -43,6 +49,18 @@ const UserSchema = new Schema<IUser>(
     isVerified: { type: Boolean, default: false },
     emailOtp: OtpSchema,
     passwordOtp: OtpSchema,
+    friends: [{ type: Schema.Types.ObjectId, ref: "User", default: [] }],
+    friendRequests: [
+      {
+        from: { type: Schema.Types.ObjectId, ref: "User" },
+        to: { type: Schema.Types.ObjectId, ref: "User" },
+        status: {
+          type: String,
+          enum: ["pending", "accepted", "rejected"],
+          default: "pending",
+        },
+      },
+    ],
   },
   {
     timestamps: true,

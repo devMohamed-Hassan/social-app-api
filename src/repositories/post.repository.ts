@@ -1,4 +1,4 @@
-import { Model, Types } from "mongoose";
+import mongoose, { Model, Types } from "mongoose";
 import { IPost, PostModel } from "../models/post.model";
 import { BaseRepository } from "./db.repository";
 
@@ -17,9 +17,28 @@ export class PostRepository extends BaseRepository<IPost> {
   /**
    * Get all posts (optionally filter by author or privacy)
    */
-  async getAllPosts(filter: Partial<IPost> = {}) {
+  async getAllPosts(
+    currentUserId: string,
+    friendIds: string[] = [],
+    filter: Partial<IPost> = {}
+  ) {
+    const userObjectId = new Types.ObjectId(currentUserId);
+
+    const privacyFilter: mongoose.FilterQuery<IPost> = {
+      $or: [
+        { privacy: "public" },
+        { author: userObjectId },
+        { $and: [{ privacy: "friends" }, { author: { $in: friendIds } }] },
+      ],
+    };
+
+    const finalFilter: mongoose.FilterQuery<IPost> = {
+      ...filter,
+      ...privacyFilter,
+    };
+
     return await this.model
-      .find({ filter })
+      .find(finalFilter)
       .populate([
         { path: "author", select: "firstName lastName profileImage" },
         { path: "tags", select: "firstName lastName profileImage" },
