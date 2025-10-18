@@ -22,7 +22,6 @@ const routes = {
   addComment: "/:id/comment",
 };
 
-// CRUD
 postRouter.post(
   routes.createPost,
   authenticate,
@@ -40,7 +39,13 @@ postRouter.get(
   postServices.getPostById
 );
 
-// postRouter.put("/:id", authMiddleware, updatePost);
+postRouter.put(
+  routes.updatePost,
+  authenticate,
+  upload.array("images", 5),
+  validate(postIdSchema),
+  postServices.updatePost
+);
 
 postRouter.delete(
   routes.deletePost,

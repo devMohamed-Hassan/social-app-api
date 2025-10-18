@@ -6,7 +6,6 @@ import { UserRepository } from "../../repositories/user.repository";
 import { PostRepository } from "../../repositories/post.repository";
 import { AppError } from "../../utils/AppError";
 import mongoose, { Types } from "mongoose";
-import { success } from "zod";
 
 export interface IPostServices {
   createPost(
@@ -188,6 +187,85 @@ export class PostServices implements IPostServices {
       statusCode: 200,
       message: "Post deleted successfully",
       data: deletedPost,
+    });
+  };
+
+  updatePost = async (
+    req: Request,
+    res: Response,
+    next: NextFunction
+  ): Promise<Response> => {
+    const { id: postId } = req.params;
+    const { content, privacy, tags }: Partial<creatPostDTO> = req.body;
+    const images = req.files as Express.Multer.File[] | undefined;
+    const user = req.user;
+
+    if (!user?._id) {
+      throw new AppError("Unauthorized", 401);
+    }
+
+    if (!postId) {
+      throw new AppError("Post ID is required", 400);
+    }
+
+    const post = await this.PostModel.getPostById(postId);
+    if (!post) {
+      throw new AppError("Post not found", 404);
+    }
+
+    if (post.author._id.toString() !== user._id.toString()) {
+      throw new AppError("You are not allowed to update this post", 403);
+    }
+
+    let validTagIds: mongoose.Types.ObjectId[] = [];
+
+    if (Array.isArray(tags) && tags.length > 0) {
+      const filteredTags = tags.filter(
+        (tagId) => String(tagId) !== String(user._id)
+      );
+
+      if (filteredTags.length !== tags.length) {
+        throw new AppError("You cannot tag yourself", 400);
+      }
+
+      const taggedUsers = await this.UserModel.findAll({
+        _id: { $in: filteredTags },
+      });
+
+      validTagIds = taggedUsers.map(
+        (u: any) => new Types.ObjectId(String(u._id))
+      );
+
+      if (validTagIds.length !== filteredTags.length) {
+        throw new AppError("Some tagged users do not exist", 400);
+      }
+    }
+
+    let updatedImageKeys: string[] = post.images || [];
+
+    if (images && images.length > 0) {
+      if (post.images && post.images.length > 0) {
+        await this.S3Service.deleteFiles(post.images);
+      }
+
+      updatedImageKeys = await this.S3Service.uploadFiles(
+        images,
+        `users/${String(user._id)}/posts`
+      );
+    }
+
+    const updatedPost = await this.PostModel.updatePost(postId, {
+      content: content ?? post.content ?? "",
+      privacy: privacy ?? post.privacy ?? "public",
+      tags: validTagIds?.length ? validTagIds : post.tags ?? [],
+      images: updatedImageKeys ?? [],
+    });
+
+    return sendSuccess({
+      res,
+      statusCode: 200,
+      message: "Post updated successfully",
+      data: updatedPost,
     });
   };
 }
