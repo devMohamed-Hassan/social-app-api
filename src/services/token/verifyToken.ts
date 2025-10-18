@@ -56,6 +56,13 @@ export const verifyToken = async ({
     throw new AppError("User not found", 404);
   }
 
+  if (user.credentialChangedAt) {
+    const tokenIssuedAt = (payload.iat || 0) * 1000;
+    if (tokenIssuedAt < user.credentialChangedAt.getTime()) {
+      throw new AppError("Session expired, please login again", 401);
+    }
+  }
+
   if (!user.isVerified) {
     throw new AppError(
       "Account not verified. Please confirm your email first",

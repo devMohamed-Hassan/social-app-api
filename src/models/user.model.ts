@@ -23,6 +23,7 @@ export interface IUser extends Document {
     to: Types.ObjectId;
     status: "pending" | "accepted" | "rejected";
   }[];
+  credentialChangedAt?: Date;
   createdAt: Date;
   updatedAt: Date;
 
@@ -61,6 +62,7 @@ const UserSchema = new Schema<IUser>(
         },
       },
     ],
+    credentialChangedAt: { type: Date },
   },
   {
     timestamps: true,

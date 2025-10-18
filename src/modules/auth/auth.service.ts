@@ -288,6 +288,7 @@ export class AuthServices implements IAuthServices {
 
     const otp = buildOtp(5, 3);
     user.passwordOtp = otp;
+    user.credentialChangedAt = new Date();
     await user.save();
 
     emailEmitter.emit("sendEmail", {
@@ -351,9 +352,8 @@ export class AuthServices implements IAuthServices {
     }
 
     user.password = password;
-
     user.passwordOtp = undefined;
-
+    user.credentialChangedAt = new Date();
     await user.save();
 
     return sendSuccess({
