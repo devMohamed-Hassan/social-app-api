@@ -16,7 +16,7 @@ const routes = {
   forgotPassword: "/forgot-password",
   resetPassword: "/reset-password",
   updatePassword: "/update-password",
-  requestEmailUpdate: "/request-email-update",
+  updateEmail: "/update-email",
   confirmEmailUpdate: "/confirm-email-update",
 };
 
@@ -59,4 +59,25 @@ authRouter.patch(
 );
 
 authRouter.patch(
+  routes.updatePassword,
+  authenticate,
+  validate(validation.updatePasswordSchema),
+  authServices.updatePassword
+);
+
+authRouter.post(
+  routes.updateEmail,
+  authenticate,
+  validate(validation.updateEmailSchema),
+  authServices.updateEmail
+);
+
+// // CONFIRM EMAIL UPDATE (verify OTP and update)
+// authRouter.post(
+//   routes.confirmEmailUpdate,
+//   authenticate,
+//   validate(validation.confirmEmailUpdateSchema),
+//   authServices.confirmEmailUpdate
+// );
+
 export default authRouter;

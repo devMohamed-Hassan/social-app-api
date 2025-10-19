@@ -8,6 +8,7 @@ import {
   ResendEmailOtpDTO,
   ResetPasswordDTO,
   SignupDTO,
+  UpdateEmailDTO,
   UpdatePasswordDTO,
 } from "./auth.dto";
 import { HydratedDocument } from "mongoose";
@@ -56,7 +57,7 @@ export class AuthServices implements IAuthServices {
     });
 
     emailEmitter.emit("sendEmail", {
-      type: "confirmEmail" as EmailEventType,
+      type: EmailEventType.ConfirmEmail,
       email: user.email,
       userName: `${user.firstName} ${user.lastName}`,
       otp: user.emailOtp?.code,
@@ -117,7 +118,7 @@ export class AuthServices implements IAuthServices {
     await user.save();
 
     emailEmitter.emit("sendEmail", {
-      type: "welcomeEmail",
+      type: EmailEventType.WelcomeEmail,
       email: user.email,
       userName: `${user.firstName} ${user.lastName}`,
       otp: "",
@@ -171,7 +172,7 @@ export class AuthServices implements IAuthServices {
     await user.save();
 
     emailEmitter.emit("sendEmail", {
-      type: "confirmEmail" as EmailEventType,
+      type: EmailEventType.ConfirmEmail,
       email: user.email,
       userName: `${user.firstName} ${user.lastName}`,
       otp: user.emailOtp.code,
@@ -219,6 +220,18 @@ export class AuthServices implements IAuthServices {
 
     const accessToken = Token.generateAccessToken(payload, { jwtid });
     const refreshToken = Token.generateRefreshToken(payload, { jwtid });
+
+    emailEmitter.emit("sendEmail", {
+      type: EmailEventType.LoginAlert,
+      email: user.email,
+      userName: `${user.firstName} ${user.lastName}`,
+      loginDetails: {
+        ip: req.ip || "Unknown",
+        userAgent: req.headers["user-agent"] || "Unknown",
+        time: new Date().toLocaleString("en-GB", { timeZone: "Africa/Cairo" }),
+        location: "Cairo, Egypt",
+      },
+    });
 
     return sendSuccess({
       res,
@@ -295,7 +308,7 @@ export class AuthServices implements IAuthServices {
     await user.save();
 
     emailEmitter.emit("sendEmail", {
-      type: "forgotPassword" as EmailEventType,
+      type: EmailEventType.ForgotPassword,
       email: user.email,
       userName: `${user.firstName} ${user.lastName}`,
       otp: user.passwordOtp?.code,
@@ -359,6 +372,13 @@ export class AuthServices implements IAuthServices {
     user.credentialChangedAt = new Date();
     await user.save();
 
+    emailEmitter.emit("sendEmail", {
+      type: EmailEventType.PasswordChanged,
+      email: user.email,
+      userName: `${user.firstName} ${user.lastName}`,
+      otp: "",
+    });
+
     return sendSuccess({
       res,
       statusCode: 200,
@@ -373,12 +393,12 @@ export class AuthServices implements IAuthServices {
   ): Promise<Response> => {
     const { oldPassword, newPassword }: UpdatePasswordDTO = req.body;
 
-    const userId = (req as any).user?._id;
+    const userId = req.user?._id;
     if (!userId) {
       throw new AppError("Unauthorized", 401);
     }
 
-    const user = await this.UserModel.findByIdWithPassword(userId);
+    const user = await this.UserModel.findByIdWithPassword(userId as string);
     if (!user) {
       throw new AppError("User not found", 404);
     }
@@ -393,7 +413,7 @@ export class AuthServices implements IAuthServices {
     await user.save();
 
     emailEmitter.emit("sendEmail", {
-      type: "passwordChanged" as EmailEventType,
+      type: EmailEventType.PasswordChanged,
       email: user.email,
       userName: `${user.firstName} ${user.lastName}`,
       otp: "",
@@ -403,6 +423,58 @@ export class AuthServices implements IAuthServices {
       res,
       statusCode: 200,
       message: "Password updated successfully",
+    });
+  };
+
+  updateEmail = async (
+    req: Request,
+    res: Response,
+    next: NextFunction
+  ): Promise<Response> => {
+    const { newEmail, password }: UpdateEmailDTO = req.body;
+    const userId = req.user?._id;
+
+    if (!userId) {
+      throw new AppError("Unauthorized", 401);
+    }
+
+    const user = await this.UserModel.findByIdWithPassword(userId as string);
+
+    if (!user) {
+      throw new AppError("User not found", 404);
+    }
+
+    const isMatch = await user.comparePassword(password);
+    if (!isMatch) {
+      throw new AppError("Incorrect password", 400);
+    }
+
+    const isEmailTaken = await this.UserModel.findByEmail(newEmail);
+    if (isEmailTaken) {
+      throw new AppError("This email is already in use", 400);
+    }
+
+    const emailChangeOtp = buildOtp(5, 3);
+
+    user.pendingEmail = newEmail;
+    user.emailChangeOtp = emailChangeOtp;
+    await user.save();
+
+    emailEmitter.emit("sendEmail", {
+      type: EmailEventType.ChangeEmail,
+      email: newEmail,
+      userName: `${user.firstName} ${user.lastName}`,
+      otp: emailChangeOtp.code,
+    });
+
+    return sendSuccess({
+      res,
+      statusCode: 200,
+      message: "OTP sent to your new email address for confirmation",
+      data: {
+        expiry: emailChangeOtp.expiresAt,
+        expiresIn: emailChangeOtp.expiresAt.getTime() - Date.now(),
+      },
     });
   };
 }

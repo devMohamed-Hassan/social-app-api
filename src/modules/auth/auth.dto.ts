@@ -6,6 +6,7 @@ import {
   resendEmailOTPSchema,
   resetPasswordSechma,
   signupSchema,
+  updateEmailSchema,
   updatePasswordSchema,
 } from "./auth.validation";
 
@@ -22,3 +23,5 @@ export type ResendEmailOtpDTO = z.infer<typeof resendEmailOTPSchema.body>;
 export type ForgotPasswordDTO = z.infer<typeof forgotPasswordSchema.body>;
 
 export type UpdatePasswordDTO = z.infer<typeof updatePasswordSchema.body>;
+
+export type UpdateEmailDTO = z.infer<typeof updateEmailSchema.body>;

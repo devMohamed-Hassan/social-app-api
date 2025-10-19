@@ -94,10 +94,30 @@ export const updatePasswordSchema = {
     .refine((data) => data.newPassword === data.rePassword, {
       message: "Passwords do not match",
       path: ["rePassword"],
-    }) 
-    
+    })
+
     .refine((data) => data.oldPassword !== data.newPassword, {
       message: "New password cannot be the same as the old password",
       path: ["newPassword"],
     }),
+};
+
+export const updateEmailSchema = {
+  body: z.object({
+    newEmail: z.email({ message: "Please provide a valid email address" }),
+
+    password: z
+      .string({ message: "Password is required" })
+      .min(8, { message: "Password must be at least 8 characters" })
+      .max(64, { message: "Password must not exceed 64 characters" })
+      .regex(/[A-Z]/, {
+        message: "Password must contain at least one uppercase letter",
+      })
+      .regex(/[0-9]/, {
+        message: "Password must contain at least one number",
+      })
+      .regex(/[@$!%*?&]/, {
+        message: "Password must contain at least one special character",
+      }),
+  }),
 };

@@ -4,12 +4,21 @@ export const emailTemplate = ({
   subject,
   message,
   expiryMinutes = 10,
+  loginDetails,
 }: {
-  code?: string;
+  code?: string | undefined;
   name: string;
   subject: string;
   message: string;
   expiryMinutes?: number;
+  loginDetails?:
+    | {
+        ip: string;
+        userAgent: string;
+        location?: string;
+        time: string;
+      }
+    | undefined;
 }): string => `<!DOCTYPE html>
 <html lang="en">
   <head>
@@ -79,6 +88,7 @@ export const emailTemplate = ({
                 >
                   Hi ${name},
                 </h2>
+
                 <p style="margin: 0 0 20px; font-size: 15px; color: #cfcbe0;">
                   ${message}
                 </p>
@@ -86,38 +96,57 @@ export const emailTemplate = ({
                 ${
                   code
                     ? `
-                <!-- Code Box -->
-                <table role="presentation" cellspacing="0" cellpadding="0" border="0" align="center" style="margin: 30px auto;">
-                  <tr>
-                    <td
-                      style="
-                        background: linear-gradient(145deg, #5b3fa8, #7c5fd1);
-                        color: #ffffff;
-                        padding: 18px 55px;
-                        border-radius: 12px;
-                        font-size: 26px;
-                        font-weight: bold;
-                        text-align: center;
-                        letter-spacing: 4px;
-                        box-shadow: 0 0 18px rgba(124, 58, 237, 0.4);
-                      "
-                    >
-                      ${code}
-                    </td>
-                  </tr>
-                </table>
+                    <!-- Code Box -->
+                    <table role="presentation" cellspacing="0" cellpadding="0" border="0" align="center" style="margin: 30px auto;">
+                      <tr>
+                        <td
+                          style="
+                            background: linear-gradient(145deg, #5b3fa8, #7c5fd1);
+                            color: #ffffff;
+                            padding: 18px 55px;
+                            border-radius: 12px;
+                            font-size: 26px;
+                            font-weight: bold;
+                            text-align: center;
+                            letter-spacing: 4px;
+                            box-shadow: 0 0 18px rgba(124, 58, 237, 0.4);
+                          "
+                        >
+                          ${code}
+                        </td>
+                      </tr>
+                    </table>
 
-                <p style="margin: 18px 0 0; font-size: 14px; color: #a78bfa;">
-                  This code is valid for <strong>${expiryMinutes} minutes</strong>.
-                  Keep it private and secure.
-                </p>
-                `
+                    <p style="margin: 18px 0 0; font-size: 14px; color: #a78bfa;">
+                      This code is valid for <strong>${expiryMinutes} minutes</strong>.
+                      Keep it private and secure.
+                    </p>
+                    `
                     : ""
                 }
 
-                <p style="margin: 28px 0 0; font-size: 14px; color: #b6aecf;">
-                  If you didn’t request this, just ignore this email.
-                </p>
+                ${
+                  loginDetails
+                    ? `
+                    <!-- Login Details Section -->
+                    <div style="margin-top: 25px; font-size: 14px; color: #d0c4f0;">
+                      <p style="margin-bottom: 8px; color: #a78bfa;">
+                        <strong>Login details:</strong>
+                      </p>
+                      <ul style="list-style: none; padding: 0; margin: 0;">
+                        <li><b>IP Address:</b> ${loginDetails.ip}</li>
+                        <li><b>Browser:</b> ${loginDetails.userAgent}</li>
+                        <li><b>Time:</b> ${loginDetails.time}</li>
+                        ${
+                          loginDetails.location
+                            ? `<li><b>Location:</b> ${loginDetails.location}</li>`
+                            : ""
+                        }
+                      </ul>
+                    </div>
+                    `
+                    : ""
+                }
 
                 <p
                   style="
