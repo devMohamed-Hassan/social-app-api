@@ -1,6 +1,7 @@
 import z from "zod";
 import {
   confirmEmailSchema,
+  confirmEmailUpdateSchema,
   forgotPasswordSchema,
   loginSchema,
   resendEmailOTPSchema,
@@ -25,3 +26,7 @@ export type ForgotPasswordDTO = z.infer<typeof forgotPasswordSchema.body>;
 export type UpdatePasswordDTO = z.infer<typeof updatePasswordSchema.body>;
 
 export type UpdateEmailDTO = z.infer<typeof updateEmailSchema.body>;
+
+export type ConfirmEmailUpdateDTO = z.infer<
+  typeof confirmEmailUpdateSchema.body
+>;

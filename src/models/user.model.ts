@@ -1,6 +1,5 @@
 import { model, Schema, Document, Types } from "mongoose";
-import OtpSchema from "./otp.model";
-import { IOtp } from "../types/otp.types";
+import OtpSchema, { IOtp } from "./otp.model";
 import { HashUtil } from "../utils/hash/bcrypt.util";
 import { CryptoUtil } from "../utils/hash/crypto.util";
 import { S3Service } from "../services/s3.service";
@@ -9,7 +8,7 @@ export interface IUser extends Document {
   firstName: string;
   lastName: string;
   email: string;
-  pendingEmail: string;
+  pendingEmail: string | undefined;
   password: string;
   phone: string;
   age: number;
@@ -17,7 +16,7 @@ export interface IUser extends Document {
   coverImage?: string | undefined;
   emailOtp?: IOtp | undefined;
   passwordOtp?: IOtp | undefined;
-  emailChangeOtp?: IOtp | undefined;
+  updateEmailOtp?: IOtp | undefined;
   isVerified: boolean;
   friends: Types.ObjectId[];
   friendRequests: {
@@ -46,11 +45,11 @@ const UserSchema = new Schema<IUser>(
     },
     pendingEmail: {
       type: String,
-      required: true,
       unique: true,
       lowercase: true,
       trim: true,
     },
+
     password: { type: String, required: true, select: false },
     phone: { type: String, unique: true, sparse: true },
     age: { type: Number, min: 18, max: 100 },
@@ -59,7 +58,7 @@ const UserSchema = new Schema<IUser>(
     isVerified: { type: Boolean, default: false },
     emailOtp: OtpSchema,
     passwordOtp: OtpSchema,
-    emailChangeOtp: OtpSchema,
+    updateEmailOtp: OtpSchema,
     friends: [{ type: Schema.Types.ObjectId, ref: "User", default: [] }],
     friendRequests: [
       {

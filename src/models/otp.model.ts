@@ -1,6 +1,16 @@
 import { Schema } from "mongoose";
 import { HashUtil } from "../utils/hash/bcrypt.util";
 
+export interface IOtp {
+  code: string;
+  expiresAt: Date;
+  verified: boolean;
+  attempts: number;
+  maxAttempts: number;
+
+  compareOtp?(plainOtp: string): Promise<boolean>;
+}
+
 const OtpSchema = new Schema(
   {
     code: {

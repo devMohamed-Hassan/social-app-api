@@ -65,19 +65,18 @@ authRouter.patch(
   authServices.updatePassword
 );
 
-authRouter.post(
+authRouter.patch(
   routes.updateEmail,
   authenticate,
   validate(validation.updateEmailSchema),
   authServices.updateEmail
 );
 
-// // CONFIRM EMAIL UPDATE (verify OTP and update)
-// authRouter.post(
-//   routes.confirmEmailUpdate,
-//   authenticate,
-//   validate(validation.confirmEmailUpdateSchema),
-//   authServices.confirmEmailUpdate
-// );
+authRouter.post(
+  routes.confirmEmailUpdate,
+  authenticate,
+  validate(validation.confirmEmailUpdateSchema),
+  authServices.confirmEmailUpdate
+);
 
 export default authRouter;

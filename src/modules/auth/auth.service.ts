@@ -3,6 +3,7 @@ import { IUser } from "./../../models/user.model";
 import { NextFunction, Request, Response } from "express";
 import {
   ConfirmEmailDTO,
+  ConfirmEmailUpdateDTO,
   ForgotPasswordDTO,
   LoginDTO,
   ResendEmailOtpDTO,
@@ -107,7 +108,9 @@ export class AuthServices implements IAuthServices {
       );
     }
 
-    if (user.emailOtp.code !== otp) {
+    const isValidOtp = await user.emailOtp.compareOtp?.(otp);
+
+    if (!isValidOtp) {
       user.emailOtp.attempts += 1;
       await user.save();
       throw new AppError("Invalid OTP", 400);
@@ -361,7 +364,9 @@ export class AuthServices implements IAuthServices {
       );
     }
 
-    if (user.passwordOtp.code !== otp) {
+    const isValidOtp = await user.passwordOtp.compareOtp?.(otp);
+
+    if (!isValidOtp) {
       user.passwordOtp.attempts += 1;
       await user.save();
       throw new AppError("Invalid OTP. Please check and try again", 400);
@@ -457,7 +462,7 @@ export class AuthServices implements IAuthServices {
     const emailChangeOtp = buildOtp(5, 3);
 
     user.pendingEmail = newEmail;
-    user.emailChangeOtp = emailChangeOtp;
+    user.updateEmailOtp = emailChangeOtp;
     await user.save();
 
     emailEmitter.emit("sendEmail", {
@@ -475,6 +480,74 @@ export class AuthServices implements IAuthServices {
         expiry: emailChangeOtp.expiresAt,
         expiresIn: emailChangeOtp.expiresAt.getTime() - Date.now(),
       },
+    });
+  };
+
+  confirmEmailUpdate = async (
+    req: Request,
+    res: Response,
+    next: NextFunction
+  ): Promise<Response> => {
+    const { otp }: ConfirmEmailUpdateDTO = req.body;
+
+    const userId = req.user?._id;
+
+    if (!userId) {
+      throw new AppError("Unauthorized", 401);
+    }
+
+    const user = await this.UserModel.findById(userId as string);
+
+    if (!user) {
+      throw new AppError("User not found", 404);
+    }
+
+    if (!user.pendingEmail || !user.updateEmailOtp) {
+      throw new AppError("No pending email change found", 400);
+    }
+
+    if (user.updateEmailOtp.expiresAt.getTime() < Date.now()) {
+      user.updateEmailOtp = undefined;
+      user.pendingEmail = undefined;
+      await user.save();
+      throw new AppError("OTP has expired, please request a new one", 400);
+    }
+
+    const isValidOtp = await user.updateEmailOtp.compareOtp?.(otp);
+
+    if (!isValidOtp) {
+      user.updateEmailOtp.attempts = (user.updateEmailOtp.attempts ?? 0) + 1;
+
+      if (user.updateEmailOtp.attempts >= 3) {
+        user.updateEmailOtp = undefined;
+        user.pendingEmail = undefined;
+        await user.save();
+        throw new AppError(
+          "Too many invalid attempts, please request a new OTP",
+          400
+        );
+      }
+
+      await user.save();
+      throw new AppError("Invalid OTP", 400);
+    }
+
+    user.email = user.pendingEmail;
+    user.pendingEmail = undefined;
+    user.updateEmailOtp = undefined;
+    await user.save();
+
+    emailEmitter.emit("sendEmail", {
+      type: EmailEventType.EmailChanged,
+      email: user.email,
+      userName: `${user.firstName} ${user.lastName}`,
+      otp: "",
+    });
+
+    return sendSuccess({
+      res,
+      statusCode: 200,
+      message: "Email address updated successfully",
     });
   };
 }

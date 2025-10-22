@@ -121,3 +121,9 @@ export const updateEmailSchema = {
       }),
   }),
 };
+
+export const confirmEmailUpdateSchema = {
+  body: z.object({
+    otp: otpValidator,
+  }),
+};
