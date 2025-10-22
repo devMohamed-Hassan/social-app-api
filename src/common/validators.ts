@@ -55,9 +55,8 @@ export const otpValidator = z
     message: "OTP must be a 6-digit numeric code",
   });
 
-export const objectIdString = z
+export const objectIdValidator = z
   .string()
-  .regex(/^[0-9a-fA-F]{24}$/, "Invalid user ID")
   .refine((val) => Types.ObjectId.isValid(val), {
     message: "Invalid user ID",
   });

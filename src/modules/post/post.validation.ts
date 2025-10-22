@@ -1,5 +1,5 @@
 import { z } from "zod";
-import { objectIdString } from "../../common/validators";
+import { objectIdValidator } from "../../common/validators";
 
 export const createPostSchema = {
   body: z
@@ -15,7 +15,7 @@ export const createPostSchema = {
         .default("public")
         .optional(),
 
-      tags: z.array(objectIdString).optional(),
+      tags: z.array(objectIdValidator).optional(),
 
       files: z
         .array(

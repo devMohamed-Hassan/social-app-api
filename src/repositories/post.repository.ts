@@ -1,6 +1,6 @@
 import mongoose, { Model, Types } from "mongoose";
 import { IPost, PostModel } from "../models/post.model";
-import { BaseRepository } from "./db.repository";
+import { BaseRepository } from "./base.repository";
 
 export class PostRepository extends BaseRepository<IPost> {
   constructor(protected override readonly model: Model<IPost> = PostModel) {

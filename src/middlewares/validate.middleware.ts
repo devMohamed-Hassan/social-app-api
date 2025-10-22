@@ -46,10 +46,18 @@ export const validate = (schema: SchemaShape) => {
 };
 
 function formatError(error: ZodError, source: ValidationSource) {
-  const issues = error.issues.map((issue) => ({
-    path: issue.path.join("."),
-    message: issue.message,
-  }));
+  const issues = error.issues
+    .map((issue) => ({
+      path: issue.path.join("."),
+      message: issue.message,
+    }))
+    .filter(
+      (issue, index, self) =>
+        index ===
+        self.findIndex(
+          (i) => i.path === issue.path && i.message === issue.message
+        )
+    );
 
   return new ValidationError("Validation failed", { source, issues });
 }

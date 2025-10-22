@@ -2,7 +2,7 @@ import { NextFunction, Request, Response } from "express";
 import { UserRepository } from "../../repositories/user.repository";
 import { sendSuccess } from "../../utils/sendSuccess";
 import { Types } from "mongoose";
-import { IUser } from "../../models/user.model";
+import { FriendRequestStatus, IUser } from "../../models/user.model";
 import { AppError } from "../../utils/AppError";
 
 export interface IFriendServices {
@@ -11,6 +11,15 @@ export interface IFriendServices {
     res: Response,
     next: NextFunction
   ): Promise<Response>;
+  acceptRequest(
+    req: Request,
+    res: Response,
+    next: NextFunction
+  ): Promise<Response>;
+  // rejectRequest(req: Request, res: Response, next: NextFunction): Promise<Response>;
+  // cancelRequest(req: Request, res: Response, next: NextFunction): Promise<Response>;
+  // getFriends(req: Request, res: Response, next: NextFunction): Promise<Response>;
+  // getPendingRequests(req: Request, res: Response, next: NextFunction): Promise<Response>;
 }
 
 export class FriendService implements IFriendServices {
@@ -32,12 +41,8 @@ export class FriendService implements IFriendServices {
     if (fromId.toString() === toUserId)
       throw new AppError("You cannot send a request to yourself", 400);
 
-    const fromUser = (await this.userRepository.findById(
-      fromId.toString()
-    )) as IUser | null;
-    const toUser = (await this.userRepository.findById(
-      toUserId
-    )) as IUser | null;
+    const fromUser = await this.userRepository.findById(fromId.toString());
+    const toUser = await this.userRepository.findById(toUserId);
 
     if (!toUser) throw new AppError("User not found", 404);
 
@@ -52,16 +57,17 @@ export class FriendService implements IFriendServices {
     }
 
     const existing = toUser.friendRequests.find(
-      (r) => r.from.toString() === fromId.toString() && r.status === "pending"
+      (r) =>
+        r.from.toString() === fromId.toString() &&
+        r.status === FriendRequestStatus.Pending
     );
-    
-    if (existing) throw new AppError("Friend request already sent", 400);
 
+    if (existing) throw new AppError("Friend request already sent", 400);
 
     toUser.friendRequests.push({
       from: fromId,
       to: toUserObjectId,
-      status: "pending",
+      status: FriendRequestStatus.Pending,
     });
     await toUser.save();
 
@@ -81,6 +87,55 @@ export class FriendService implements IFriendServices {
           lastName: toUser.lastName,
         },
       },
+    });
+  };
+
+  acceptRequest = async (
+    req: Request,
+    res: Response,
+    next: NextFunction
+  ): Promise<Response> => {
+    if (!req.user) throw new AppError("Unauthorized", 401);
+
+    const toId = req.user._id as Types.ObjectId;
+    const { id: fromUserId } = req.params;
+
+    if (!fromUserId) throw new AppError("Missing fromUserId", 400);
+
+    const toUser = await this.userRepository.findById(toId.toString());
+    const fromUser = await this.userRepository.findById(fromUserId);
+
+    if (!toUser || !fromUser) throw new AppError("User not found", 404);
+
+    const fromObjectId = fromUser._id as Types.ObjectId;
+    const toObjectId = toUser._id as Types.ObjectId;
+
+    const requestIndex = toUser.friendRequests.findIndex(
+      (r) =>
+        r.from.toString() === fromUserId &&
+        r.status === FriendRequestStatus.Pending
+    );
+
+    if (requestIndex === -1) {
+      throw new AppError("Friend request not found or already handled", 400);
+    }
+
+    if (!toUser.friends.some((f) => f.toString() === fromObjectId.toString())) {
+      toUser.friends.push(fromObjectId);
+    }
+
+    if (!fromUser.friends.some((f) => f.toString() === toObjectId.toString())) {
+      fromUser.friends.push(toObjectId);
+    }
+
+    toUser.friendRequests.splice(requestIndex, 1);
+
+    await Promise.all([toUser.save(), fromUser.save()]);
+
+    return sendSuccess({
+      res,
+      statusCode: 200,
+      message: "Friend request has been accepted successfully.",
     });
   };
 }

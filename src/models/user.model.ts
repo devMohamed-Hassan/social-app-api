@@ -4,6 +4,18 @@ import { HashUtil } from "../utils/hash/bcrypt.util";
 import { CryptoUtil } from "../utils/hash/crypto.util";
 import { S3Service } from "../services/s3.service";
 
+export enum FriendRequestStatus {
+  Pending = "pending",
+  Accepted = "accepted",
+  Rejected = "rejected",
+}
+
+export interface IFriendRequest {
+  from: Types.ObjectId;
+  to: Types.ObjectId;
+  status: FriendRequestStatus;
+}
+
 export interface IUser extends Document {
   firstName: string;
   lastName: string;
@@ -21,11 +33,7 @@ export interface IUser extends Document {
   isVerified: boolean;
   twoFactorEnabled: boolean;
   friends: Types.ObjectId[];
-  friendRequests: {
-    from: Types.ObjectId;
-    to: Types.ObjectId;
-    status: "pending" | "accepted" | "rejected";
-  }[];
+  friendRequests: IFriendRequest[];
   credentialChangedAt?: Date;
   createdAt: Date;
   updatedAt: Date;
@@ -70,8 +78,8 @@ const UserSchema = new Schema<IUser>(
         to: { type: Schema.Types.ObjectId, ref: "User" },
         status: {
           type: String,
-          enum: ["pending", "accepted", "rejected"],
-          default: "pending",
+          enum: Object.values(FriendRequestStatus),
+          default: FriendRequestStatus.Pending,
         },
       },
     ],

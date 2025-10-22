@@ -5,7 +5,7 @@ import {
   QueryOptions,
 } from "mongoose";
 import { IUser, UserModel } from "../models/user.model";
-import { BaseRepository } from "./db.repository";
+import { BaseRepository } from "./base.repository";
 
 export class UserRepository extends BaseRepository<IUser> {
   constructor(protected override readonly model: Model<IUser> = UserModel) {
@@ -41,24 +41,22 @@ export class UserRepository extends BaseRepository<IUser> {
   async updateProfileImage(
     userId: string,
     imageUrl: string
-  ): Promise<IUser | null> {
-    const user = await UserModel.findByIdAndUpdate(
+  ): Promise<HydratedDocument<IUser> | null> {
+    return this.model.findByIdAndUpdate(
       userId,
       { profileImage: imageUrl },
       { new: true, select: "-password" }
     );
-    return user;
   }
 
   async updateCoverImage(
     userId: string,
     imageUrl: string
-  ): Promise<IUser | null> {
-    const user = await UserModel.findByIdAndUpdate(
+  ): Promise<HydratedDocument<IUser> | null> {
+    return this.model.findByIdAndUpdate(
       userId,
       { coverImage: imageUrl },
       { new: true, select: "-password" }
     );
-    return user;
   }
 }
