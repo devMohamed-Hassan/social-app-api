@@ -5,76 +5,94 @@ import { authenticate } from "../../middlewares/authenticate.middleware";
 import { upload } from "../../middlewares/multer.middleware";
 import { validate } from "../../middlewares/validate.middleware";
 import {
+  updateUserInfoSchema,
   blockUserSchema,
   unblockUserSchema,
   getBlockedUsersSchema,
+  getUserByIdSchema,
 } from "./user.validation";
 
 const userRouter = Router();
 const userServices = new UserServices();
 
-userRouter.get(
-  "/me",
-  authenticate,
-  async (
-    req: Request,
-    res: Response,
-    next: NextFunction
-  ): Promise<Response> => {
-    const userData = await req.user?.getSignedUserData();
+const routes = {
+  me: "/me",
+  getUserById: "/:id",
+  updateMe: "/me",
+  profileImage: "/profile-image",
+  coverImage: "/cover-image",
+  presignedProfileImage: "/profile-image/presigned",
+  deleteProfileImage: "/profile-image",
+  deleteCoverImage: "/cover-image",
+  blockUser: "/block/:id",
+  unblockUser: "/block/:id",
+  getBlockedUsers: "/blocked",
+};
 
-    return sendSuccess({
-      res,
-      statusCode: 200,
-      data: { user: userData },
-    });
-  }
+userRouter.get(routes.me, authenticate, userServices.me);
+
+userRouter.get(
+  routes.getUserById,
+  authenticate,
+  validate(getUserByIdSchema),
+  userServices.getUserById
 );
 
 userRouter.patch(
-  "/profile-image",
+  routes.updateMe,
+  authenticate,
+  validate(updateUserInfoSchema),
+  userServices.updateUserInfo
+);
+
+userRouter.patch(
+  routes.profileImage,
   authenticate,
   upload.single("profileImage"),
   userServices.profileImage
 );
 
 userRouter.patch(
-  "/cover-image",
+  routes.coverImage,
   authenticate,
   upload.single("coverImage"),
   userServices.coverImage
 );
 
 userRouter.post(
-  "/profile-image/presigned",
+  routes.presignedProfileImage,
   authenticate,
   userServices.generatePresignedProfileUrl
 );
 
 userRouter.delete(
-  "/profile-image",
+  routes.deleteProfileImage,
   authenticate,
   userServices.deleteProfileImage
 );
 
-userRouter.delete("/cover-image", authenticate, userServices.deleteCoverImage);
+userRouter.delete(
+  routes.deleteCoverImage,
+  authenticate,
+  userServices.deleteCoverImage
+);
 
 userRouter.post(
-  "/block/:id",
+  routes.blockUser,
   authenticate,
   validate(blockUserSchema),
   userServices.blockUser
 );
 
 userRouter.delete(
-  "/block/:id",
+  routes.unblockUser,
   authenticate,
   validate(unblockUserSchema),
   userServices.unblockUser
 );
 
 userRouter.get(
-  "/blocked",
+  routes.getBlockedUsers,
   authenticate,
   validate(getBlockedUsersSchema),
   userServices.getBlockedUsers

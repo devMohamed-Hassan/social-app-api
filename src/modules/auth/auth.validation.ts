@@ -9,6 +9,7 @@ import {
   passwordValidator,
   phoneValidator,
 } from "../../common/validators";
+import { Gender } from "../../models/user.model";
 
 export const signupSchema = {
   body: z
@@ -18,6 +19,7 @@ export const signupSchema = {
       email: emailValidator,
       age: ageValidator,
       phone: phoneValidator,
+      gender: z.enum([Gender.Male, Gender.Female]),
       password: passwordValidator,
       rePassword: z.string().trim(),
     })

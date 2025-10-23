@@ -39,8 +39,15 @@ export class AuthServices implements IAuthServices {
     res: Response,
     next: NextFunction
   ): Promise<Response> => {
-    const { firstName, lastName, email, age, phone, password }: SignupDTO =
-      req.body;
+    const {
+      firstName,
+      lastName,
+      email,
+      age,
+      phone,
+      gender,
+      password,
+    }: SignupDTO = req.body;
 
     const isExist = await this.UserModel.findByEmail(email);
 
@@ -56,6 +63,7 @@ export class AuthServices implements IAuthServices {
       email,
       age,
       phone,
+      gender,
       password,
       emailOtp,
     });

@@ -6,6 +6,16 @@ import { UserRepository } from "../../repositories/user.repository";
 import mime from "mime-types";
 
 export interface IUserServices {
+  updateUserInfo(
+    req: Request,
+    res: Response,
+    next: NextFunction
+  ): Promise<Response>;
+  getUserById(
+    req: Request,
+    res: Response,
+    next: NextFunction
+  ): Promise<Response>;
   profileImage(
     req: Request,
     res: Response,
@@ -29,6 +39,119 @@ export class UserServices implements IUserServices {
   private s3Service = new S3Service();
 
   constructor() {}
+
+  me = async (
+    req: Request,
+    res: Response,
+    next: NextFunction
+  ): Promise<Response> => {
+    const userData = await req.user?.getSignedUserData();
+
+    return sendSuccess({
+      res,
+      statusCode: 200,
+      data: { user: userData },
+    });
+  };
+
+  updateUserInfo = async (
+    req: Request,
+    res: Response,
+    next: NextFunction
+  ): Promise<Response> => {
+    const userId = req.user?.id;
+    const { firstName, lastName, age, phone, gender, bio } = req.body;
+
+    if (!userId) {
+      throw new AppError("User not authenticated", 401);
+    }
+
+    const user = await this.UserModel.findById(userId);
+    if (!user) {
+      throw new AppError("User not found", 404);
+    }
+
+    const updateData: any = {};
+    if (firstName !== undefined) updateData.firstName = firstName;
+    if (lastName !== undefined) updateData.lastName = lastName;
+    if (age !== undefined) updateData.age = age;
+    if (phone !== undefined) updateData.phone = phone;
+    if (gender !== undefined) updateData.gender = gender;
+    if (bio !== undefined) updateData.bio = bio;
+
+    if (Object.keys(updateData).length === 0) {
+      throw new AppError("No valid fields to update", 400);
+    }
+
+    if (phone && phone !== user.phone) {
+      const existingUser = await this.UserModel.findByEmail(phone);
+
+      if (existingUser && existingUser._id?.toString() !== userId) {
+        throw new AppError("Phone number is already in use", 400);
+      }
+    }
+
+    const updatedUser = await this.UserModel.update(userId, updateData, {
+      select: "-password",
+    });
+
+    if (!updatedUser) {
+      throw new AppError("Failed to update user information", 500);
+    }
+
+    const userData = await updatedUser.getSignedUserData();
+
+    return sendSuccess({
+      res,
+      statusCode: 200,
+      message: "User information updated successfully",
+      data: { user: userData },
+    });
+  };
+
+  getUserById = async (
+    req: Request,
+    res: Response,
+    next: NextFunction
+  ): Promise<Response> => {
+    const { id: targetUserId } = req.params;
+    const currentUserId = req.user?.id;
+
+    if (!targetUserId) {
+      throw new AppError("User ID is required", 400);
+    }
+
+    if (currentUserId === targetUserId) {
+      throw new AppError("Use GET /me to get your own profile", 400);
+    }
+
+    const targetUser = await this.UserModel.findById(targetUserId);
+    if (!targetUser) {
+      throw new AppError("User not found", 404);
+    }
+
+    const isBlocked = await this.UserModel.isUserBlocked(
+      currentUserId,
+      targetUserId
+    );
+    const isBlockedBy = await this.UserModel.isUserBlocked(
+      targetUserId,
+      currentUserId
+    );
+
+    if (isBlocked || isBlockedBy) {
+      throw new AppError("User profile not accessible", 403);
+    }
+
+    const userData = await targetUser.getSignedUserData();
+
+    return sendSuccess({
+      res,
+      statusCode: 200,
+      message: "User profile retrieved successfully",
+      data: { user: userData },
+    });
+  };
 
   profileImage = async (
     req: Request,

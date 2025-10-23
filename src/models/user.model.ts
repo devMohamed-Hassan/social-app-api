@@ -10,6 +10,11 @@ export enum FriendRequestStatus {
   Rejected = "rejected",
 }
 
+export enum Gender {
+  Male = "male",
+  Female = "female",
+}
+
 export interface IFriendRequest {
   from: Types.ObjectId;
   to: Types.ObjectId;
@@ -24,6 +29,8 @@ export interface IUser extends Document {
   password: string;
   phone: string;
   age: number;
+  gender: Gender;
+  bio?: string;
   profileImage?: string | undefined;
   coverImage?: string | undefined;
   emailOtp?: IOtp | undefined;
@@ -64,6 +71,17 @@ const UserSchema = new Schema<IUser>(
     password: { type: String, required: true, select: false },
     phone: { type: String, unique: true, sparse: true },
     age: { type: Number, min: 18, max: 100 },
+    gender: {
+      type: String,
+      required: true,
+      enum: Object.values(Gender),
+    },
+    bio: {
+      type: String,
+      trim: true,
+      maxlength: 300,
+      default: "",
+    },
     profileImage: { type: String },
     coverImage: { type: String },
     isVerified: { type: Boolean, default: false },
@@ -124,6 +142,16 @@ UserSchema.pre("save", async function (next) {
   next();
 });
 
+UserSchema.pre("findOneAndUpdate", function (next) {
+  const update = this.getUpdate() as any;
+
+  if (update.phone) {
+    update.phone = CryptoUtil.encrypt(update.phone);
+  }
+
+  next();
+});
+
 UserSchema.methods.getSignedUserData = async function () {
   const s3Service = new S3Service();
   const expiresInSeconds = 3600;
@@ -153,6 +181,8 @@ UserSchema.methods.getSignedUserData = async function () {
     email: this.email,
     phone: CryptoUtil.decrypt(this.phone),
     age: this.age,
+    gender: this.gender,
+    bio: this.bio || "",
     isVerified: this.isVerified,
     profileImage,
     coverImage,
