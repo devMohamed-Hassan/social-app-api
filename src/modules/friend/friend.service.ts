@@ -16,10 +16,26 @@ export interface IFriendServices {
     res: Response,
     next: NextFunction
   ): Promise<Response>;
-  // rejectRequest(req: Request, res: Response, next: NextFunction): Promise<Response>;
-  // cancelRequest(req: Request, res: Response, next: NextFunction): Promise<Response>;
-  // getFriends(req: Request, res: Response, next: NextFunction): Promise<Response>;
-  // getPendingRequests(req: Request, res: Response, next: NextFunction): Promise<Response>;
+  rejectRequest(
+    req: Request,
+    res: Response,
+    next: NextFunction
+  ): Promise<Response>;
+  cancelRequest(
+    req: Request,
+    res: Response,
+    next: NextFunction
+  ): Promise<Response>;
+  getFriends(
+    req: Request,
+    res: Response,
+    next: NextFunction
+  ): Promise<Response>;
+  getPendingRequests(
+    req: Request,
+    res: Response,
+    next: NextFunction
+  ): Promise<Response>;
 }
 
 export class FriendService implements IFriendServices {
@@ -154,6 +170,227 @@ export class FriendService implements IFriendServices {
       res,
       statusCode: 200,
       message: "Friend request has been accepted successfully.",
+    });
+  };
+
+  rejectRequest = async (
+    req: Request,
+    res: Response,
+    next: NextFunction
+  ): Promise<Response> => {
+    if (!req.user) throw new AppError("Unauthorized", 401);
+
+    const toId = req.user._id as Types.ObjectId;
+    const { id: fromUserId } = req.params;
+
+    if (!fromUserId) throw new AppError("Missing fromUserId", 400);
+
+    const toUser = await this.userRepository.findById(toId.toString());
+    if (!toUser) throw new AppError("User not found", 404);
+
+    const requestIndex = toUser.friendRequests.findIndex(
+      (r) =>
+        r.from.toString() === fromUserId &&
+        r.status === FriendRequestStatus.Pending
+    );
+
+    if (requestIndex === -1) {
+      throw new AppError("Friend request not found or already handled", 400);
+    }
+
+    toUser.friendRequests.splice(requestIndex, 1);
+    await toUser.save();
+
+    return sendSuccess({
+      res,
+      statusCode: 200,
+      message: "Friend request has been rejected successfully.",
+    });
+  };
+
+  cancelRequest = async (
+    req: Request,
+    res: Response,
+    next: NextFunction
+  ): Promise<Response> => {
+    if (!req.user) throw new AppError("Unauthorized", 401);
+
+    const fromId = req.user._id as Types.ObjectId;
+    const { id: toUserId } = req.params;
+
+    if (!toUserId) throw new AppError("Missing target user ID", 400);
+
+    const toUser = await this.userRepository.findById(toUserId);
+    if (!toUser) throw new AppError("User not found", 404);
+
+    const requestIndex = toUser.friendRequests.findIndex(
+      (r) =>
+        r.from.toString() === fromId.toString() &&
+        r.status === FriendRequestStatus.Pending
+    );
+
+    if (requestIndex === -1) {
+      throw new AppError("Friend request not found or already handled", 400);
+    }
+
+    toUser.friendRequests.splice(requestIndex, 1);
+    await toUser.save();
+
+    return sendSuccess({
+      res,
+      statusCode: 200,
+      message: "Friend request has been cancelled successfully.",
+    });
+  };
+
+  getFriends = async (
+    req: Request,
+    res: Response,
+    next: NextFunction
+  ): Promise<Response> => {
+    if (!req.user) throw new AppError("Unauthorized", 401);
+
+    const userId = req.user._id as Types.ObjectId;
+    const { page = 1, limit = 10 } = req.query as any;
+    
+    const pageNum = parseInt(page.toString(), 10);
+    const limitNum = parseInt(limit.toString(), 10);
+
+    const user = await this.userRepository.findById(userId.toString());
+    if (!user) throw new AppError("User not found", 404);
+
+    const friendIds = user.friends.map((id) => id.toString());
+    
+    if (friendIds.length === 0) {
+      return sendSuccess({
+        res,
+        statusCode: 200,
+        message: "Friends retrieved successfully",
+        data: {
+          friends: [],
+          pagination: {
+            page: pageNum,
+            limit: limitNum,
+            total: 0,
+            pages: 0,
+          },
+        },
+      });
+    }
+
+    const skip = (pageNum - 1) * limitNum;
+    const friends = await this.userRepository.findAll(
+      { _id: { $in: friendIds } },
+      undefined,
+      { skip, limit: limitNum }
+    );
+
+    const friendsData = await Promise.all(
+      friends.map(async (friend) => {
+        const userData = await friend.getSignedUserData();
+        return {
+          id: userData.id,
+          firstName: userData.firstName,
+          lastName: userData.lastName,
+          email: userData.email,
+          profileImage: userData.profileImage,
+          friendsSince: friend.updatedAt,
+        };
+      })
+    );
+
+    return sendSuccess({
+      res,
+      statusCode: 200,
+      message: "Friends retrieved successfully",
+      data: {
+        friends: friendsData,
+        pagination: {
+          page: pageNum,
+          limit: limitNum,
+          total: friendIds.length,
+          pages: Math.ceil(friendIds.length / limitNum),
+        },
+      },
+    });
+  };
+
+  getPendingRequests = async (
+    req: Request,
+    res: Response,
+    next: NextFunction
+  ): Promise<Response> => {
+    if (!req.user) throw new AppError("Unauthorized", 401);
+
+    const userId = req.user._id as Types.ObjectId;
+    const { page = 1, limit = 10 } = req.query as any;
+    
+    const pageNum = parseInt(page.toString(), 10);
+    const limitNum = parseInt(limit.toString(), 10);
+
+    const user = await this.userRepository.findById(userId.toString());
+    if (!user) throw new AppError("User not found", 404);
+
+    const pendingRequests = user.friendRequests.filter(
+      (req) => req.status === FriendRequestStatus.Pending
+    );
+
+    if (pendingRequests.length === 0) {
+      return sendSuccess({
+        res,
+        statusCode: 200,
+        message: "Pending requests retrieved successfully",
+        data: {
+          requests: [],
+          pagination: {
+            page: pageNum,
+            limit: limitNum,
+            total: 0,
+            pages: 0,
+          },
+        },
+      });
+    }
+
+    const skip = (pageNum - 1) * limitNum;
+    const requestSenders = await this.userRepository.findAll(
+      { _id: { $in: pendingRequests.map((req) => req.from) } },
+      undefined,
+      { skip, limit: limitNum }
+    );
+
+    const requestsData = await Promise.all(
+      requestSenders.map(async (sender) => {
+        const userData = await sender.getSignedUserData();
+        const request = pendingRequests.find(
+          (req) => req.from.toString() === (sender._id as any).toString()
+        );
+        
+        return {
+          id: userData.id,
+          firstName: userData.firstName,
+          lastName: userData.lastName,
+          email: userData.email,
+          profileImage: userData.profileImage,
+          requestId: request?.from.toString(),
+          sentAt: sender.createdAt,
+        };
+      })
+    );
+
+    return sendSuccess({
+      res,
+      statusCode: 200,
+      message: "Pending requests retrieved successfully",
+      data: {
+        requests: requestsData,
+        pagination: {
+          page: pageNum,
+          limit: limitNum,
+          total: pendingRequests.length,
+          pages: Math.ceil(pendingRequests.length / limitNum),
+        },
+      },
     });
   };
 }
