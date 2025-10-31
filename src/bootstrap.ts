@@ -9,7 +9,7 @@ import { ENV } from "./config/env";
 import { connectDB } from "./config/db";
 import { S3Service } from "./services/s3.service";
 import { AppError } from "./utils/AppError";
-import { initializeSocket } from "./modules/chat/chat.gateway";
+import { initializeSocket } from "./services/gateway";
 
 const streamPipeline = promisify(pipeline);
 

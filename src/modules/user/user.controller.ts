@@ -1,6 +1,4 @@
-import { NextFunction, Request, Response, Router } from "express";
 import { UserServices } from "./user.service";
-import { sendSuccess } from "../../utils/sendSuccess";
 import { authenticate } from "../../middlewares/authenticate.middleware";
 import { upload } from "../../middlewares/multer.middleware";
 import { validate } from "../../middlewares/validate.middleware";
@@ -11,6 +9,7 @@ import {
   getBlockedUsersSchema,
   getUserByIdSchema,
 } from "./user.validation";
+import { Router } from "express";
 
 const userRouter = Router();
 const userServices = new UserServices();
