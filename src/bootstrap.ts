@@ -1,30 +1,33 @@
+import http from "http";
 import express, { NextFunction, Request, Response } from "express";
+import cors from "cors";
+import { promisify } from "node:util";
+import { pipeline } from "node:stream";
 import routers from "./routes";
 import { errorHandler } from "./middlewares/error.middleware";
 import { ENV } from "./config/env";
 import { connectDB } from "./config/db";
 import { S3Service } from "./services/s3.service";
-import { promisify } from "node:util";
-import { pipeline } from "node:stream";
 import { AppError } from "./utils/AppError";
+import { initializeSocket } from "./modules/chat/chat.gateway";
 
 const streamPipeline = promisify(pipeline);
 
-const app = express();
-
 export const bootstrap = () => {
+  const app = express();
+  app.use(cors());
+
   app.use(express.json());
 
   connectDB();
-
-  app.use("/api/v1", routers);
-  app.use(errorHandler);
 
   app.get("/", (req, res, next) => {
     res.json({
       message: "Welcome to the Social App",
     });
   });
+
+  app.use("/api/v1", routers);
 
   app.get(
     "/assets/*path",
@@ -67,7 +70,14 @@ export const bootstrap = () => {
     }
   );
 
-  app.listen(ENV.PORT, () => {
+  app.use(errorHandler);
+
+  const httpServer = http.createServer(app);
+  const io = initializeSocket(httpServer);
+
+  httpServer.listen(ENV.PORT, () => {
     console.log(`Server running on http://localhost:${ENV.PORT}`);
   });
+
+  return { app, io };
 };

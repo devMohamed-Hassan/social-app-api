@@ -158,34 +158,55 @@ UserSchema.methods.getSignedUserData = async function () {
   const now = Math.floor(Date.now() / 1000);
   const expiresAt = now + expiresInSeconds;
 
-  const profileImage = this.profileImage
-    ? {
-        url: await s3Service.getSignedUrl(this.profileImage),
-        expiresIn: expiresInSeconds,
-        expiresAt,
-      }
-    : undefined;
+  const getSignedImage = async (key?: string) => {
+    if (!key) return undefined;
+    return {
+      url: await s3Service.getSignedUrl(key),
+      expiresIn: expiresInSeconds,
+      expiresAt,
+    };
+  };
 
-  const coverImage = this.coverImage
-    ? {
-        url: await s3Service.getSignedUrl(this.coverImage),
-        expiresIn: expiresInSeconds,
-        expiresAt,
-      }
-    : undefined;
+  await this.populate({
+    path: "friends",
+    select: "firstName lastName profileImage email isVerified",
+  });
+
+  let decryptedPhone: string | undefined;
+  try {
+    decryptedPhone = CryptoUtil.decrypt(this.phone);
+  } catch {}
+
+  const friendsData = await Promise.all(
+    (this.friends || []).map(async (friend: any) => ({
+      id: friend._id,
+      firstName: friend.firstName,
+      lastName: friend.lastName,
+      email: friend.email,
+      isVerified: friend.isVerified,
+      profileImage: friend.profileImage
+        ? {
+            url: await s3Service.getSignedUrl(friend.profileImage),
+            expiresIn: expiresInSeconds,
+            expiresAt,
+          }
+        : undefined,
+    }))
+  );
 
   return {
     id: this._id,
     firstName: this.firstName,
     lastName: this.lastName,
     email: this.email,
-    phone: CryptoUtil.decrypt(this.phone),
+    phone: decryptedPhone,
     age: this.age,
     gender: this.gender,
     bio: this.bio || "",
     isVerified: this.isVerified,
-    profileImage,
-    coverImage,
+    profileImage: await getSignedImage(this.profileImage),
+    coverImage: await getSignedImage(this.coverImage),
+    friends: friendsData,
     createdAt: this.createdAt,
     updatedAt: this.updatedAt,
   };
