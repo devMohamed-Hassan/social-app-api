@@ -8,8 +8,10 @@ import {
   unblockUserSchema,
   getBlockedUsersSchema,
   getUserByIdSchema,
+  chatSchema,
 } from "./user.validation";
 import { Router } from "express";
+import chatRouter from "../chat/chat.controller";
 
 const userRouter = Router();
 const userServices = new UserServices();
@@ -26,6 +28,7 @@ const routes = {
   blockUser: "/block/:id",
   unblockUser: "/block/:id",
   getBlockedUsers: "/blocked",
+  chat: "/:id/chat",
 };
 
 userRouter.get(routes.me, authenticate, userServices.me);
@@ -96,5 +99,7 @@ userRouter.get(
   validate(getBlockedUsersSchema),
   userServices.getBlockedUsers
 );
+
+userRouter.use(routes.chat, validate(chatSchema), authenticate, chatRouter);
 
 export default userRouter;

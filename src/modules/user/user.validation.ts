@@ -59,3 +59,9 @@ export const getUserByIdSchema = {
     id: objectIdValidator,
   }),
 };
+
+export const chatSchema = {
+  params: z.object({
+    id: objectIdValidator,
+  }),
+};
