@@ -129,9 +129,6 @@ export class CommentServices implements ICommentServices {
     if (!post.comments || !post.comments[index])
       throw new AppError("Comment not found", 404);
 
-    console.log(req.user?.id);
-    console.log(post.comments);
-
     if (post.comments[index].userId._id.toString() !== req.user?.id)
       throw new AppError("You can only delete your own comment", 403);
 
@@ -143,6 +140,86 @@ export class CommentServices implements ICommentServices {
       statusCode: 200,
       message: "Comment deleted successfully",
       data: {},
+    });
+  };
+
+  updateComment = async (req: Request, res: Response): Promise<Response> => {
+    const { id: postId, commentIndex } = req.params;
+    const { text } = req.body;
+    const userId = req.user?.id;
+
+    const post = await this.postRepository.getPostById(postId as string);
+    if (!post) throw new AppError("Post not found", 404);
+
+    const comment = post.comments?.[Number(commentIndex)];
+    if (!comment) throw new AppError("Comment not found", 404);
+
+    if (comment.userId._id.toString() !== userId)
+      throw new AppError("You can only update your own comment", 403);
+
+    comment.text = text;
+    await post.save();
+
+    return sendSuccess({
+      res,
+      statusCode: 200,
+      message: "Comment updated successfully",
+      data: comment,
+    });
+  };
+
+  deleteReply = async (req: Request, res: Response): Promise<Response> => {
+    const { id: postId, commentIndex, replyIndex } = req.params;
+    const userId = req.user?.id;
+
+    const post = await this.postRepository.getPostById(postId as string);
+    if (!post) throw new AppError("Post not found", 404);
+
+    const comment = post.comments?.[Number(commentIndex)];
+    if (!comment) throw new AppError("Comment not found", 404);
+
+    const reply = comment.replies?.[Number(replyIndex)];
+    if (!reply) throw new AppError("Reply not found", 404);
+
+    if (reply.userId._id.toString() !== userId)
+      throw new AppError("You can only delete your own reply", 403);
+
+    comment.replies?.splice(Number(replyIndex), 1);
+    await post.save();
+
+    return sendSuccess({
+      res,
+      statusCode: 200,
+      message: "Reply deleted successfully",
+      data: {},
+    });
+  };
+
+  updateReply = async (req: Request, res: Response): Promise<Response> => {
+    const { id: postId, commentIndex, replyIndex } = req.params;
+    const { text } = req.body;
+    const userId = req.user?.id;
+
+    const post = await this.postRepository.getPostById(postId as string);
+    if (!post) throw new AppError("Post not found", 404);
+
+    const comment = post.comments?.[Number(commentIndex)];
+    if (!comment) throw new AppError("Comment not found", 404);
+
+    const reply = comment.replies?.[Number(replyIndex)];
+    if (!reply) throw new AppError("Reply not found", 404);
+
+    if (reply.userId._id.toString() !== userId)
+      throw new AppError("You can only update your own reply", 403);
+
+    reply.text = text;
+    await post.save();
+
+    return sendSuccess({
+      res,
+      statusCode: 200,
+      message: "Reply updated successfully",
+      data: reply,
     });
   };
 }

@@ -5,6 +5,9 @@ import {
   addCommentSchema,
   addReplySchema,
   deleteCommentSchema,
+  deleteReplySchema,
+  updateCommentSchema,
+  updateReplySchema,
 } from "./comment.validation";
 
 const commentRouter = Router({ mergeParams: true });
@@ -15,6 +18,9 @@ const routes = {
   addComments: "/",
   addReply: "/:commentIndex/reply",
   deleteComment: "/:commentIndex",
+  updateComment: "/:commentIndex",
+  updateRelpy: "/:commentIndex/reply/:replyIndex",
+  deleteReply: "/:commentIndex/reply/:replyIndex",
 };
 
 commentRouter.get(routes.getComments, commentServices.getCommentsByPost);
@@ -35,6 +41,22 @@ commentRouter.delete(
   routes.deleteComment,
   validate(deleteCommentSchema),
   commentServices.deleteComment
+);
+commentRouter.patch(
+  routes.updateComment,
+  validate(updateCommentSchema),
+  commentServices.updateComment
+);
+
+commentRouter.patch(
+  routes.updateRelpy,
+  validate(updateReplySchema),
+  commentServices.updateReply
+);
+commentRouter.delete(
+  routes.deleteReply,
+  validate(deleteReplySchema),
+  commentServices.deleteReply
 );
 
 export default commentRouter;
