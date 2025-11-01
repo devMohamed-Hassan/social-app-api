@@ -4,6 +4,7 @@ import { AppError } from "../../utils/AppError";
 import { sendSuccess } from "../../utils/sendSuccess";
 import { UserRepository } from "../../repositories/user.repository";
 import { ChatRepository } from "../../repositories/chat.repository";
+import { ChatModel } from "../../models/chat.model";
 
 export class ChatServices {
   private userModel = new UserRepository();
@@ -26,9 +27,7 @@ export class ChatServices {
 
     const user = await this.userModel.findOne({
       _id: userObjectId,
-      friends: {
-        $in: [receiverObjectId, receiverId],
-      },
+      friends: { $in: [receiverObjectId, receiverId] },
     });
 
     if (!user) {
@@ -39,27 +38,25 @@ export class ChatServices {
 
     if (!chat) {
       chat = await this.chatModel.createPrivateConversation(userId, receiverId);
-      const populatedChat = await chat.populate(
-        "participants",
-        "firstName lastName profileImage"
-      );
-      return sendSuccess({
-        res,
-        statusCode: 200,
-        message: "New chat created successfully",
-        data: { chat: populatedChat },
-      });
     }
 
-    const populatedChat = await chat.populate(
-      "participants",
-      "firstName lastName profileImage"
-    );
+    const populatedChat = await ChatModel.findById(chat._id)
+      .populate("participants", "firstName lastName profileImage _id")
+      .populate({
+        path: "messages",
+        populate: {
+          path: "sender",
+          select: "_id firstName lastName profileImage",
+        },
+      })
+      .lean();
 
     return sendSuccess({
       res,
       statusCode: 200,
-      message: "Chat retrieved successfully",
+      message: chat
+        ? "Chat retrieved successfully"
+        : "New chat created successfully",
       data: { chat: populatedChat },
     });
   };

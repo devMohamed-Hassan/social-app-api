@@ -25,4 +25,14 @@ const MessageSchema = new Schema<IMessage>(
   { timestamps: true }
 );
 
+MessageSchema.set("toJSON", {
+  virtuals: true,
+  transform: (_: any, ret: Record<string, any>) => {
+    ret.id = ret._id;
+    delete ret._id;
+    delete ret.__v;
+    return ret;
+  },
+});
+
 export const MessageModel = model<IMessage>("Message", MessageSchema);

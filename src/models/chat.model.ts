@@ -6,6 +6,7 @@ export interface IChat extends Document {
   groupName?: string;
   groupImage?: string;
   lastMessage?: Types.ObjectId;
+  messages: Types.ObjectId[];
   createdAt: Date;
   updatedAt: Date;
 }
@@ -34,6 +35,12 @@ const ChatSchema = new Schema<IChat>(
       type: Schema.Types.ObjectId,
       ref: "Message",
     },
+    messages: [
+      {
+        type: Schema.Types.ObjectId,
+        ref: "Message",
+      },
+    ],
   },
   {
     timestamps: true,

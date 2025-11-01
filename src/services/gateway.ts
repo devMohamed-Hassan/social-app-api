@@ -19,33 +19,22 @@ const addSocket = (userId: string, socketId: string) => {
 const removeSocket = (userId: string, socketId: string) => {
   const sockets = connectedSockets.get(userId) || [];
   const updated = sockets.filter((id) => id !== socketId);
-  if (updated.length === 0) connectedSockets.delete(userId);
-  else connectedSockets.set(userId, updated);
+  updated.length
+    ? connectedSockets.set(userId, updated)
+    : connectedSockets.delete(userId);
 };
 
-export const disconnet = (socket: IAuthenticatedSocket) => {
+const handleDisconnect = (socket: IAuthenticatedSocket) => {
   socket.on("disconnect", () => {
     if (!socket.user?._id) return;
-    const userId = socket.user._id.toString();
-    removeSocket(userId, socket.id);
-    console.log(`User ${socket.user?.firstName} disconnected`);
-  });
-};
-
-const handleChatEvents = (io: Server, socket: IAuthenticatedSocket) => {
-  socket.on("message", (data) => {
-    console.log(`Message from ${socket.user?.firstName}:`, data);
-  });
-
-  socket.on("typing", (receiverId) => {
-    socket.to(receiverId).emit("typing", { from: socket.user?._id });
+    removeSocket(socket.user._id.toString(), socket.id);
+    console.log(`${socket.user?.firstName} disconnected`);
   });
 };
 
 export const initializeSocket = (httpServer: any) => {
-  const chatGateway = new ChatGateway();
-
   const io = new Server(httpServer, { cors: { origin: "*" } });
+  const chatGateway = new ChatGateway();
 
   io.use(async (socket: IAuthenticatedSocket, next) => {
     try {
@@ -61,17 +50,17 @@ export const initializeSocket = (httpServer: any) => {
 
   io.on("connection", (socket: IAuthenticatedSocket) => {
     if (!socket.user?._id) return;
-    socket.emit("connected", { message: "Socket connection established" });
-
-    chatGateway.sendMessage(socket);
 
     const userId = socket.user._id.toString();
     addSocket(userId, socket.id);
 
-    console.log(`${socket.user?.firstName} ${socket.user?.lastName} connected`);
+    console.log(`${socket.user?.firstName} connected`);
 
-    handleChatEvents(io, socket);
-    disconnet(socket);
+    socket.emit("connected", { message: "Socket connection established" });
+
+    chatGateway.initializeSocketEvents(socket);
+
+    handleDisconnect(socket);
   });
 
   return io;
