@@ -3,6 +3,7 @@ import OtpSchema, { IOtp } from "./otp.model";
 import { HashUtil } from "../utils/hash/bcrypt.util";
 import { CryptoUtil } from "../utils/hash/crypto.util";
 import { S3Service } from "../services/s3.service";
+import { ChatModel } from "./chat.model";
 
 export enum FriendRequestStatus {
   Pending = "pending",
@@ -194,6 +195,56 @@ UserSchema.methods.getSignedUserData = async function () {
     }))
   );
 
+  const groups = await ChatModel.find({
+    isGroup: true,
+    participants: this._id,
+  })
+    .populate({
+      path: "participants",
+      select: "firstName lastName profileImage _id",
+    })
+    .populate("lastMessage")
+    .sort({ updatedAt: -1 })
+    .lean();
+
+  const groupsData = await Promise.all(
+    groups.map(async (group: any) => {
+      const groupName =
+        group.groupName ||
+        group.name ||
+        (group.participants?.length
+          ? group.participants
+              .slice(0, 3)
+              .map((p: any) => p.firstName)
+              .join(", ")
+          : "Unnamed Group");
+
+      return {
+        id: group._id,
+        name: groupName,
+        description: group.description || "",
+        isGroup: group.isGroup,
+        createdAt: group.createdAt,
+        updatedAt: group.updatedAt,
+        lastMessage: group.lastMessage || null,
+        participants: await Promise.all(
+          group.participants.map(async (participant: any) => ({
+            id: participant._id,
+            firstName: participant.firstName,
+            lastName: participant.lastName,
+            profileImage: participant.profileImage
+              ? {
+                  url: await s3Service.getSignedUrl(participant.profileImage),
+                  expiresIn: expiresInSeconds,
+                  expiresAt,
+                }
+              : undefined,
+          }))
+        ),
+      };
+    })
+  );
+
   return {
     id: this._id,
     firstName: this.firstName,
@@ -207,6 +258,7 @@ UserSchema.methods.getSignedUserData = async function () {
     profileImage: await getSignedImage(this.profileImage),
     coverImage: await getSignedImage(this.coverImage),
     friends: friendsData,
+    groups: groupsData,
     createdAt: this.createdAt,
     updatedAt: this.updatedAt,
   };

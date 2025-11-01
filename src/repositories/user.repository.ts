@@ -38,6 +38,10 @@ export class UserRepository extends BaseRepository<IUser> {
     return this.model.findById(userId, projection, options).select("+password");
   }
 
+  async findManyByIds(ids: string[]) {
+    return this.model.find({ _id: { $in: ids } });
+  }
+
   async updateProfileImage(
     userId: string,
     imageUrl: string
@@ -113,14 +117,12 @@ export class UserRepository extends BaseRepository<IUser> {
   }
 
   async removeFriendship(userId1: string, userId2: string): Promise<void> {
-    await this.model.findByIdAndUpdate(
-      userId1,
-      { $pull: { friends: userId2 } }
-    );
+    await this.model.findByIdAndUpdate(userId1, {
+      $pull: { friends: userId2 },
+    });
 
-    await this.model.findByIdAndUpdate(
-      userId2,
-      { $pull: { friends: userId1 } }
-    );
+    await this.model.findByIdAndUpdate(userId2, {
+      $pull: { friends: userId1 },
+    });
   }
 }
