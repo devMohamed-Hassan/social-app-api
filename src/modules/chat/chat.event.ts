@@ -14,5 +14,13 @@ export class ChatEvents {
     socket.on("typing", (receiverId: string) => {
       socket.to(receiverId).emit("typing", { from: socket.user?._id });
     });
+
+    socket.on("sendGroupMessage", (data) =>
+      this.chatSocketServices.sendGroupMessage(socket, data)
+    );
+
+    socket.on("joinGroup", (data) =>
+      this.chatSocketServices.joinGroupRoom(socket, data)
+    );
   };
 }

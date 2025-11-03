@@ -158,6 +158,14 @@ export class GroupChatServices implements IGroupChatServices {
     });
     if (!chat) throw new AppError("Group not found or access denied", 404);
 
+    const isMember = chat.participants.some(
+      (id) => id.toString() === userIdToRemove
+    );
+    
+    if (!isMember) {
+      throw new AppError("User not in group", 400);
+    }
+
     chat.participants = chat.participants.filter(
       (id) => id.toString() !== userIdToRemove
     );
