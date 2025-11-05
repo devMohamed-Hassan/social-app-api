@@ -62,6 +62,15 @@ A robust and scalable RESTful API backend for a modern social media platform, bu
 
 ## Project Architecture
 
+The project implements clean architecture principles:
+
+- Modular design
+- Separation of concerns
+- Repository pattern
+- Service layer abstraction
+- DTO pattern
+- Event-driven architecture
+
 ```plaintext
 src/
 ├── bootstrap.ts          # Application bootstrapping
@@ -84,7 +93,7 @@ src/
 └── utils/              # Helper utilities
 ```
 
-## API Overview & Examples
+## API Overview
 
 ### Authentication API
 
@@ -198,7 +207,7 @@ Content-Type: application/json
 
 For complete API documentation including response formats, error codes, and more endpoints, please refer to our [API Documentation](./docs/api.md).
 
-## 🔑 Environment Variables
+## Environment Variables
 
 Create a `.env` file with the following variables:
 
