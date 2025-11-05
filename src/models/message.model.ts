@@ -1,4 +1,4 @@
-import { model, Schema, Types } from "mongoose";
+import { Document, model, Schema, Types } from "mongoose";
 
 export interface IMessage extends Document {
   conversation: Types.ObjectId;
