@@ -22,7 +22,8 @@
     /* Recommended Options */
     "strict": true,
     "isolatedModules": true,
-    "skipLibCheck": true
+    "skipLibCheck": true,
+    "noEmitOnError": false
   },
   "include": ["src"],
   "exclude": ["node_modules", "dist"]
