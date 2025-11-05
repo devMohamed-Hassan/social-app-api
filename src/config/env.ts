@@ -18,6 +18,7 @@ interface Env {
   AWS_SECRET_ACCESS_KEY: string;
   AWS_S3_BUCKET_NAME: string;
   CRYPTO_KEY: string;
+  MONGO_ATLS_URI: string;
 }
 
 const getEnv = <K extends keyof Env>(key: K, defaultValue?: string): string => {
@@ -46,4 +47,5 @@ export const ENV: Env = {
   AWS_SECRET_ACCESS_KEY: getEnv("AWS_SECRET_ACCESS_KEY"),
   AWS_S3_BUCKET_NAME: getEnv("AWS_S3_BUCKET_NAME"),
   CRYPTO_KEY: getEnv("CRYPTO_KEY", "default_32_character_crypto_key_1234"),
+  MONGO_ATLS_URI: getEnv("MONGO_ATLS_URI"),
 };
