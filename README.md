@@ -2,6 +2,9 @@
 
 A robust and scalable RESTful API backend for a modern social media platform, built with Node.js, Express, and TypeScript.
 
+## Live Chat Preview 
+![Live Chat](public/screenshots/livechat.png)
+
 ## Table of Contents
 
 - [Features](#-features)
