@@ -18,35 +18,57 @@ A robust and scalable RESTful API backend for a modern social media platform, bu
 
 ## Features
 
-- **Authentication & Authorization**
-  - JWT-based authentication with access and refresh tokens  
-  - Secure refresh token rotation mechanism  
-  - Email verification through OTP (One-Time Password)  
-  - Password hashing and encryption using **bcrypt**  
-  - Optional Two-Factor Authentication (2FA) for enhanced account security  
+### Authentication & Security
+- JWT-based authentication with **Access & Refresh tokens**
+- **Email OTP verification** and password reset
+- Optional **Two-Factor Authentication (2FA)** via email
+- Secure password hashing using **bcrypt**
+- Token rotation and invalidation
+- Login activity tracking and session protection
+- **Zod validation** for strict schema enforcement
+- Encrypted data fields using **Crypto.js**
 
-- **User Management**
-  - User profiles with avatars
-  - Profile updates and settings
-  - Friend requests and connections
+### User Management
+- Create, read, update, and delete profiles
+- Profile avatar upload via **AWS S3**
+- Signed URL generation for secure uploads
+- User blocking/unblocking system
+- User bio, gender, age, phone, and contact details
+- Retrieve blocked users and privacy settings
 
-- **Posts & Content**
-  - Create, read, update, and delete posts
-  - Image upload support via AWS S3
-  - Comments and reactions
-  - Content moderation
+### Posts & Comments
+- Create, update, and delete posts
+- Visibility options: `public`, `friends`, `private`
+- Image/video uploads through AWS S3
+- Like, comment, and mention users
+- Auto cleanup of media on delete
+- Hashtags and content tagging support
 
-- **Real-time Chat**
-  - Private messaging
-  - Group chats
-  - Real-time notifications via Socket.io
-  - Message status tracking
+### Chat & Messaging
+- Real-time private and group chat using **Socket.io**
+- Message delivery confirmation & read receipts
+- Group creation and management
+- Online/offline user presence tracking
+- Secure message storage and deletion
+- Event-driven notifications for new messages
 
-- **Social Features**
-  - Friend management system
-  - User mentions and tagging
-  - Activity feed
-  - Privacy controls
+### Friends & Social Features
+- Send and manage friend requests
+- Accept/decline/block users
+- View friends and mutual connections
+- Social feed showing posts from friends
+- Notifications for friend requests and mentions
+
+### Infrastructure
+- Clean modular architecture
+- Centralized error handling and logging
+- **AWS S3** for file uploads
+- **Mongoose ODM** for MongoDB
+- **Nodemailer** for sending OTP and notifications
+- **Winston logger** for server monitoring
+- Environment-based configuration management
+
+---
 
 ## Tech Stack
 
