@@ -21,9 +21,36 @@ export const bootstrap = () => {
 
   connectDB();
 
-  app.get("/", (req, res, next) => {
-    res.json({
-      message: "Welcome to the Social App",
+  app.get("/", (req, res) => {
+    const egyptTime = new Date().toLocaleString("en-GB", {
+      timeZone: "Africa/Cairo",
+      hour12: false,
+      year: "numeric",
+      month: "2-digit",
+      day: "2-digit",
+      hour: "2-digit",
+      minute: "2-digit",
+      second: "2-digit",
+    });
+
+    res.status(200).json({
+      success: true,
+      message: "Welcome to the Social App Backend API",
+      version: "1.0.0",
+      serverTime: egyptTime,
+      developedBy: {
+        name: "Mohamed Hassan Esmail",
+        role: "Full-Stack Developer",
+        contact: {
+          email: "mohamed.h.ismael@gmail.com",
+          github: "https://github.com/devMohamed-Hassan",
+          linkedin:
+            "https://www.linkedin.com/in/mohamed-hassan-esmail-7590b22bb/",
+        },
+      },
+      description:
+        "A modern backend API for a social media platform with real-time features.",
+      note: "For API access credentials <Bearer token> and the Postman collection, please contact the developer directly via email.",
     });
   });
 
