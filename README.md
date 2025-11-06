@@ -19,10 +19,11 @@ A robust and scalable RESTful API backend for a modern social media platform, bu
 ## Features
 
 - **Authentication & Authorization**
-  - JWT-based authentication
-  - Refresh token mechanism
-  - Email verification with OTP
-  - Password encryption with bcrypt
+  - JWT-based authentication with access and refresh tokens  
+  - Secure refresh token rotation mechanism  
+  - Email verification through OTP (One-Time Password)  
+  - Password hashing and encryption using **bcrypt**  
+  - Optional Two-Factor Authentication (2FA) for enhanced account security  
 
 - **User Management**
   - User profiles with avatars
