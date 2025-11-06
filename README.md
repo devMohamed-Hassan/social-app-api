@@ -98,6 +98,11 @@ src/
 
 ## API Overview
 
+### Deployment URLs:
+```
+https://social-app-backend-tau.vercel.app
+```
+
 ### Authentication API
 
 #### Sign Up
