@@ -13,8 +13,6 @@ A robust and scalable RESTful API backend for a modern social media platform, bu
 - [API Overview](#-api-overview)
 - [Installation & Setup](#-installation--setup)
 - [Environment Variables](#-environment-variables)
-- [Database Configuration](#-database-configuration)
-- [Error Handling](#-error-handling)
 
 ## Features
 
@@ -68,6 +66,16 @@ A robust and scalable RESTful API backend for a modern social media platform, bu
 - **Winston logger** for server monitoring
 - Environment-based configuration management
 
+### Error Handling
+
+The application implements a centralized error handling mechanism:
+
+- Custom `AppError` class for error creation
+- Global error handling middleware
+- Structured error responses
+- Validation error handling with Zod
+- Async error catching with express middleware
+
 ---
 
 ## Tech Stack
@@ -82,9 +90,6 @@ A robust and scalable RESTful API backend for a modern social media platform, bu
 - **Email Service**: Nodemailer
 - **Validation**: Zod
 - **Security**: CORS, Crypto.js
-- **Development Tools**: 
-  - TypeScript compiler
-  - Development server with hot reload
 
 ## Project Architecture
 
@@ -236,7 +241,7 @@ Content-Type: application/json
 }
 ```
 
-For complete API documentation including response formats, error codes, and more endpoints, please refer to our [API Documentation](./docs/api.md).
+> For complete API documentation [API Documentation](./docs/api.md).
 
 ## Environment Variables
 
@@ -268,25 +273,5 @@ EMAIL_PASS=your_email_password
 CRYPTO_KEY=your_crypto_key
 ```
 
-## Database Configuration
-
-This project uses MongoDB as its database. The connection is configured in `src/config/db.ts`. Make sure to:
-
-1. Have MongoDB installed locally or use MongoDB Atlas
-2. Set the `MONGO_URI` in your `.env` file
-3. The application will automatically handle connection and schema setup
-
-## Error Handling
-
-The application implements a centralized error handling mechanism:
-
-- Custom `AppError` class for error creation
-- Global error handling middleware
-- Structured error responses
-- Validation error handling with Zod
-- Async error catching with express middleware
-
-> **⚠️ Note:**  
-> This application was carefully developed to demonstrate a **modern social media platform backend** with full authentication and chat features.
->   
+> **Note:**   
 > For **API access credentials (Bearer token)** and the **Postman collection**, please **contact the developer** at **mohamed.h.ismael@gmail.com**.
