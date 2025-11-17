@@ -241,7 +241,7 @@ Content-Type: application/json
 }
 ```
 
-> For complete API documentation [API Documentation](./docs/api.md).
+> For complete API documentation [API Documentation](https://www.postman.com/maintenance-candidate-2675300/workspace/public-workspace/collection/45449526-802b2f33-5050-46e3-81e5-a999697e6728?action=share&creator=45449526&active-environment=45449526-c3ef379c-add5-4408-90b5-3407db5366fb).
 
 ## Environment Variables
 
