@@ -1,8 +1,8 @@
-# Social Media Platform Backend
+# Social App
 
 A robust and scalable RESTful API backend for a modern social media platform, built with Node.js, Express, and TypeScript.
 
-## Live Chat Preview 
+### Live Chat Preview 
 ![Live Chat](public/livechat.png)
 
 ## Table of Contents
@@ -242,36 +242,3 @@ Content-Type: application/json
 ```
 
 > For complete API documentation [API Documentation](https://www.postman.com/maintenance-candidate-2675300/workspace/public-workspace/collection/45449526-802b2f33-5050-46e3-81e5-a999697e6728?action=share&creator=45449526&active-environment=45449526-c3ef379c-add5-4408-90b5-3407db5366fb).
-
-## Environment Variables
-
-Create a `.env` file with the following variables:
-
-```plaintext
-NODE_ENV=development
-PORT=3000
-MONGO_URI=your_mongodb_connection_string
-CLIENT_URL=http://localhost:3000
-
-# Authentication
-SALT_ROUNDS=5
-ACCESS_TOKEN_SECRET=your_access_token_secret
-REFRESH_TOKEN_SECRET=your_refresh_token_secret
-BEARER_KEY=your_bearer_key
-
-# AWS S3 Configuration
-AWS_REGION=your_aws_region
-AWS_ACCESS_KEY_ID=your_access_key
-AWS_SECRET_ACCESS_KEY=your_secret_key
-AWS_S3_BUCKET_NAME=your_bucket_name
-
-# Email Configuration
-EMAIL_USER=your_email
-EMAIL_PASS=your_email_password
-
-# Encryption
-CRYPTO_KEY=your_crypto_key
-```
-
-> **Note:**   
-> For **API access credentials (Bearer token)** and the **Postman collection**, please **contact the developer** at **mohamed.h.ismael@gmail.com**.
